@@ -90,7 +90,7 @@ public:
 
     // Copy constructor (deep copy)
     SinglyLinkedList(const SinglyLinkedList& other) {
-        std::shared_lock<std::shared_mutex> lock(other.mtx);
+        std::shared_lock lock(other.mtx);
         clear_internal();
         auto current = other.head;
         while (current) {
@@ -101,7 +101,7 @@ public:
 
     // Move constructor
     SinglyLinkedList(SinglyLinkedList&& other) noexcept {
-        std::unique_lock<std::shared_mutex> lock(other.mtx);
+        std::unique_lock lock(other.mtx);
         head = std::move(other.head);
         tail = std::move(other.tail);
         count = other.count;
@@ -111,8 +111,8 @@ public:
     // Copy assignment operator
     SinglyLinkedList& operator=(const SinglyLinkedList& other) {
         if (this != &other) {
-            std::unique_lock<std::shared_mutex> lock1(mtx, std::defer_lock);
-            std::shared_lock<std::shared_mutex> lock2(other.mtx, std::defer_lock);
+            std::unique_lock lock1(mtx, std::defer_lock);
+            std::shared_lock lock2(other.mtx, std::defer_lock);
             std::lock(lock1, lock2);
             clear_internal();
             if (other.head) {
@@ -135,8 +135,8 @@ public:
     // Move assignment operator
     SinglyLinkedList& operator=(SinglyLinkedList&& other) noexcept {
         if (this != &other) {
-            std::unique_lock<std::shared_mutex> lock1(mtx, std::defer_lock);
-            std::unique_lock<std::shared_mutex> lock2(other.mtx, std::defer_lock);
+            std::unique_lock lock1(mtx, std::defer_lock);
+            std::unique_lock lock2(other.mtx, std::defer_lock);
             std::lock(lock1, lock2);
             head = std::move(other.head);
             tail = std::move(other.tail);
@@ -148,39 +148,39 @@ public:
 
     // Destructor
     ~SinglyLinkedList() {
-        std::unique_lock<std::shared_mutex> lock(mtx);
+        std::unique_lock lock(mtx);
         clear_internal();
     }
 
     // Modifiers
 
     void push_front(const Key& key, const Value& value) {
-        std::unique_lock<std::shared_mutex> lock(mtx);
+        std::unique_lock lock(mtx);
         push_front_internal(key, value);
     }
 
     void push_back(const Key& key, const Value& value) {
-        std::unique_lock<std::shared_mutex> lock(mtx);
+        std::unique_lock lock(mtx);
         push_back_internal(key, value);
     }
 
     std::optional<std::pair<Key, Value>> pop_front() {
-        std::unique_lock<std::shared_mutex> lock(mtx);
+        std::unique_lock lock(mtx);
         return pop_front_internal();
     }
 
     std::optional<std::pair<Key, Value>> pop_back() {
-        std::unique_lock<std::shared_mutex> lock(mtx);
+        std::unique_lock lock(mtx);
         return pop_back_internal();
     }
 
     void clear() {
-        std::unique_lock<std::shared_mutex> lock(mtx);
+        std::unique_lock lock(mtx);
         clear_internal();
     }
 
     void insert(size_t pos, const Key& key, const Value& value) {
-        std::unique_lock<std::shared_mutex> lock(mtx);
+        std::unique_lock lock(mtx);
         if (pos > count)
             throw std::out_of_range("Index out of range in insert()");
         if (pos == 0) {
@@ -202,7 +202,7 @@ public:
     }
 
     void erase(size_t pos) {
-        std::unique_lock<std::shared_mutex> lock(mtx);
+        std::unique_lock lock(mtx);
         if (pos >= count)
             throw std::out_of_range("Index out of range in erase()");
         if (pos == 0) {
@@ -226,7 +226,7 @@ public:
     }
 
     void erase(size_t first, size_t last) {
-        std::unique_lock<std::shared_mutex> lock(mtx);
+        std::unique_lock lock(mtx);
         if (first >= count || last > count || first >= last)
             throw std::out_of_range("Invalid range in erase()");
         if (first == 0 && last == count) {
@@ -263,35 +263,35 @@ public:
     // Element access
 
     std::pair<Key, Value>& front() {
-        std::shared_lock<std::shared_mutex> lock(mtx);
+        std::shared_lock lock(mtx);
         if (!head)
             throw std::out_of_range("List is empty");
         return head->data;
     }
 
     const std::pair<Key, Value>& front() const {
-        std::shared_lock<std::shared_mutex> lock(mtx);
+        std::shared_lock lock(mtx);
         if (!head)
             throw std::out_of_range("List is empty");
         return head->data;
     }
 
     std::pair<Key, Value>& back() {
-        std::shared_lock<std::shared_mutex> lock(mtx);
+        std::shared_lock lock(mtx);
         if (!tail)
             throw std::out_of_range("List is empty");
         return tail->data;
     }
 
     const std::pair<Key, Value>& back() const {
-        std::shared_lock<std::shared_mutex> lock(mtx);
+        std::shared_lock lock(mtx);
         if (!tail)
             throw std::out_of_range("List is empty");
         return tail->data;
     }
 
     std::pair<Key, Value>& at(size_t index) {
-        std::shared_lock<std::shared_mutex> lock(mtx);
+        std::shared_lock lock(mtx);
         if (index >= count)
             throw std::out_of_range("Index out of range");
         auto current = head;
@@ -301,7 +301,7 @@ public:
     }
 
     const std::pair<Key, Value>& at(size_t index) const {
-        std::shared_lock<std::shared_mutex> lock(mtx);
+        std::shared_lock lock(mtx);
         if (index >= count)
             throw std::out_of_range("Index out of range");
         auto current = head;
@@ -311,7 +311,7 @@ public:
     }
 
     std::pair<Key, Value>& operator[](size_t index) {
-        std::shared_lock<std::shared_mutex> lock(mtx);
+        std::shared_lock lock(mtx);
         if (index >= count) {
             throw std::out_of_range("Index out of range");
         }
@@ -323,7 +323,7 @@ public:
     }
 
     const std::pair<Key, Value>& operator[](size_t index) const {
-        std::shared_lock<std::shared_mutex> lock(mtx);
+        std::shared_lock lock(mtx);
         if (index >= count) {
             throw std::out_of_range("Index out of range");
         }
@@ -337,7 +337,7 @@ public:
     // Search methods
 
     std::optional<std::reference_wrapper<std::pair<Key, Value>>> search(const Key& key) {
-        std::shared_lock<std::shared_mutex> lock(mtx);
+        std::shared_lock lock(mtx);
         auto current = head;
         while (current) {
             if (current->data.first == key)
@@ -349,7 +349,7 @@ public:
 
     template<typename Predicate>
     std::optional<std::reference_wrapper<std::pair<Key, Value>>> search_if(Predicate pred) {
-        std::shared_lock<std::shared_mutex> lock(mtx);
+        std::shared_lock lock(mtx);
         auto current = head;
         while (current) {
             if (pred(current->data))
@@ -360,7 +360,7 @@ public:
     }
 
     std::optional<size_t> find_index_by_key(const Key& key) const {
-        std::shared_lock<std::shared_mutex> lock(mtx);
+        std::shared_lock lock(mtx);
         size_t index = 0;
         auto current = head;
         while (current) {
@@ -375,19 +375,19 @@ public:
     //Capacity
 
     bool empty() {
-        std::shared_lock<std::shared_mutex> lock(mtx);
+        std::shared_lock lock(mtx);
         return !head;
     }
 
     size_t size() const {
-        std::shared_lock<std::shared_mutex> lock(mtx);
+        std::shared_lock lock(mtx);
         return count;
     }
 
     // Floyd’s Cycle Finding Algorithm
 
     bool cycle() const {
-        std::shared_lock<std::shared_mutex> lock(mtx);
+        std::shared_lock lock(mtx);
         auto slow = head, fast = head;
         while (fast && fast->next) {
             slow = slow->next;
@@ -397,5 +397,83 @@ public:
             }
         }
         return false;
+    }
+
+    // Iterator for non-const access
+    class iterator {
+    public:
+        using value_type = std::pair<Key, Value>;
+        using pointer = value_type*;
+        using reference = value_type&;
+        using difference_type = std::ptrdiff_t;
+        using iterator_category = std::forward_iterator_tag;
+
+        iterator(Node* ptr) : current(ptr) {}
+
+        reference operator*() const { return current->data; }
+        pointer operator->() const { return &(current->data); }
+
+        iterator& operator++() {
+            current = current->next.get();
+            return *this;
+        }
+        iterator operator++(int) {
+            iterator temp = *this;
+            ++(*this);
+            return temp;
+        }
+        bool operator==(const iterator& other) const { return current == other.current; }
+        bool operator!=(const iterator& other) const { return current != other.current; }
+    private:
+        Node* current;
+    };
+
+    // Iterator for const access
+    class const_iterator {
+    public:
+        using value_type = const std::pair<Key, Value>;
+        using pointer = const value_type*;
+        using reference = const value_type&;
+        using difference_type = std::ptrdiff_t;
+        using iterator_category = std::forward_iterator_tag;
+
+        const_iterator(const Node* ptr) : current(ptr) {}
+
+        reference operator*() const { return current->data; }
+        pointer operator->() const { return &(current->data); }
+
+        const_iterator& operator++() {
+            current = current->next.get();
+            return *this;
+        }
+        const_iterator operator++(int) {
+            const_iterator temp = *this;
+            ++(*this);
+            return temp;
+        }
+        bool operator==(const const_iterator& other) const { return current == other.current; }
+        bool operator!=(const const_iterator& other) const { return current != other.current; }
+    private:
+        const Node* current;
+    };
+
+    // begin/end functions for iterator support
+    iterator begin() {
+        return iterator(head.get());
+    }
+    iterator end() {
+        return iterator(nullptr);
+    }
+    const_iterator begin() const {
+        return const_iterator(head.get());
+    }
+    const_iterator end() const {
+        return const_iterator(nullptr);
+    }
+    const_iterator cbegin() const {
+        return const_iterator(head.get());
+    }
+    const_iterator cend() const {
+        return const_iterator(nullptr);
     }
 };
