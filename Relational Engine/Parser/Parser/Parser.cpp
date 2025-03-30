@@ -1,20 +1,58 @@
-// Parser.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
+#include "Lexer.h"
 #include <iostream>
+#include <memory>
+#include <string>
 
-int main()
-{
-    std::cout << "Hello World!\n";
+std::string tokenTypeToString(TokenType type) {
+    switch (type) {
+    case TokenType::KEYWORD:      return "KEYWORD";
+    case TokenType::IDENTIFIER:   return "IDENTIFIER";
+    case TokenType::LITERAL:      return "LITERAL";
+    case TokenType::OPERATOR:     return "OPERATOR";
+    case TokenType::SYMBOL:       return "SYMBOL";
+    case TokenType::END_OF_FILE:  return "END_OF_FILE";
+    case TokenType::UNKNOWN:      return "UNKNOWN";
+    }
+    return "UNKNOWN";
 }
 
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
+std::string literalTypeToString(LiteralType type) {
+    switch (type) {
+    case LiteralType::STRING:     return "STRING";
+    case LiteralType::CHAR:       return "CHAR";
+    case LiteralType::INTEGER:    return "INTEGER";
+    case LiteralType::FLOAT:      return "FLOAT";
+    case LiteralType::BINARY:     return "BINARY";
+    case LiteralType::HEX:        return "HEX";
+    case LiteralType::DATE:       return "DATE";
+    case LiteralType::TIME:       return "TIME";
+    case LiteralType::DATETIME:   return "DATETIME";
+    case LiteralType::JSON:       return "JSON";
+    case LiteralType::BOOLEAN:    return "BOOLEAN";
+    case LiteralType::NULL_VALUE: return "NULL_VALUE";
+    case LiteralType::UNKNOWN:    return "UNKNOWN";
+    }
+    return "UNKNOWN";
+}
 
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
+int main() {
+    std::string query =
+        "SELECT \"Hello\", 'A', 123, -456, 3.14, B'1010', X'1A2F', "
+        "'2025-03-30', '14:30:00', '2025-03-30 14:30:00', {\"key\": \"value\"}, TRUE, NULL FROM my_table;";
+
+    Lexer lexer(query);
+
+    std::unique_ptr<Token> token;
+    std::cout << "Token list:\n";
+    while ((token = lexer.nextToken())->type != TokenType::END_OF_FILE) {
+        std::cout << "Token: \"" << token->value << "\""
+            << " | Type: " << tokenTypeToString(token->type);
+        if (token->type == TokenType::LITERAL) {
+            std::cout << " (LiteralType: " << literalTypeToString(token->literalType) << ")";
+        }
+        std::cout << " | Position: " << token->position << std::endl;
+    }
+    std::cout << "Token: \"\" | Type: " << tokenTypeToString(token->type)
+        << " | Position: " << token->position << std::endl;
+    return 0;
+}

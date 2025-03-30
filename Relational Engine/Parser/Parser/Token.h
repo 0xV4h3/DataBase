@@ -1,6 +1,5 @@
 #pragma once
 
-#include "literal.h"
 #include <string>
 
 enum class TokenType {
@@ -11,6 +10,79 @@ enum class TokenType {
     SYMBOL, // ','  , ';' , '()' , '{}', '[]'  
     END_OF_FILE, // input stream end
     UNKNOWN // unknown token
+};
+
+enum class Keyword {
+    SELECT,
+    FROM,
+    WHERE,
+    INSERT,
+    UPDATE,
+    DELETE,
+    CREATE,
+    DROP,
+    ALTER,
+    JOIN,
+    ON,
+    GROUP,
+    BY,
+    HAVING,
+    ORDER,
+    LIMIT,
+    OFFSET,
+    UNION,
+    ALL,
+    DISTINCT,
+    AS,
+    IN,
+    IS,
+    NULL_KEYWORD,
+    TRUE_KEYWORD,
+    FALSE_KEYWORD,
+    UNKNOWN
+};
+
+enum class LiteralType {
+    STRING,   // "..."
+    CHAR,     // '...'
+    INTEGER,  // 123, -456
+    FLOAT,    // 3.14, -0.001
+    BINARY,   // B'0101'
+    HEX,       // X'01AF'
+    DATE,     // '2025-03-30'
+    TIME,     // '14:30:00'
+    DATETIME, // '2025-03-30 14:30:00'
+    JSON,     // '{ "key": "value" }'
+    BOOLEAN,  // TRUE, FALSE
+    NULL_VALUE, // NULL 
+    UNKNOWN   // unknown literal
+};
+
+enum class Operator {
+    PLUS,       // +
+    MINUS,      // -
+    MULTIPLY,   // *
+    DIVIDE,     // /
+    MOD,        // %
+    ASSIGN,     // =
+    LESS,       // <
+    GREATER,    // >
+    LESS_EQUAL, // <=
+    GREATER_EQUAL, // >=
+    NOT_EQUAL,     // <>
+    UNKNOWN
+};
+
+enum class Symbol {
+    COMMA,      // ,
+    SEMICOLON,  // ;
+    LPAREN,     // (
+    RPAREN,     // )
+    LBRACE,     // {
+    RBRACE,     // }
+    LBRACKET,   // [
+    RBRACKET,   // ]
+    UNKNOWN
 };
 
 struct Token {
