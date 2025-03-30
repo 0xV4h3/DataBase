@@ -89,6 +89,122 @@ private:
     }
 
 public:
+    // Iterator for non-const access
+    class iterator {
+        friend class DoublyLinkedList;
+    public:
+        using value_type = std::pair<Key, Value>;
+        using pointer = value_type*;
+        using reference = value_type&;
+        using difference_type = std::ptrdiff_t;
+        using iterator_category = std::bidirectional_iterator_tag;
+
+        iterator(Node* ptr, Node* tailPtr) : current(ptr), tail(tailPtr) {}
+
+        reference operator*() const { return current->data; }
+        pointer operator->() const { return &(current->data); }
+
+        // Prefix increment
+        iterator& operator++() {
+            if (current)
+                current = current->next.get();
+            return *this;
+        }
+        // Postfix increment
+        iterator operator++(int) {
+            iterator temp = *this;
+            ++(*this);
+            return temp;
+        }
+        // Prefix decrement
+        iterator& operator--() {
+            if (!current) {
+                current = tail;
+            }
+            else {
+                current = current->prev.lock().get();
+            }
+            return *this;
+        }
+        // Postfix decrement
+        iterator operator--(int) {
+            iterator temp = *this;
+            --(*this);
+            return temp;
+        }
+        bool operator==(const iterator& other) const { return current == other.current; }
+        bool operator!=(const iterator& other) const { return current != other.current; }
+
+    private:
+        Node* current;
+        Node* tail;
+    };
+
+    // Iterator for const access
+    class const_iterator {
+        friend class DoublyLinkedList;
+    public:
+        using value_type = const std::pair<Key, Value>;
+        using pointer = const value_type*;
+        using reference = const value_type&;
+        using difference_type = std::ptrdiff_t;
+        using iterator_category = std::bidirectional_iterator_tag;
+
+        const_iterator(const Node* ptr, const Node* tailPtr) : current(ptr), tail(tailPtr) {}
+
+        reference operator*() const { return current->data; }
+        pointer operator->() const { return &(current->data); }
+
+        const_iterator& operator++() {
+            if (current)
+                current = current->next.get();
+            return *this;
+        }
+        const_iterator operator++(int) {
+            const_iterator temp = *this;
+            ++(*this);
+            return temp;
+        }
+        const_iterator& operator--() {
+            if (!current)
+                current = tail;
+            else
+                current = current->prev.lock().get();
+            return *this;
+        }
+        const_iterator operator--(int) {
+            const_iterator temp = *this;
+            --(*this);
+            return temp;
+        }
+        bool operator==(const const_iterator& other) const { return current == other.current; }
+        bool operator!=(const const_iterator& other) const { return current != other.current; }
+
+    private:
+        const Node* current;
+        const Node* tail;
+    };
+
+    // begin/end functions for iterator support
+    iterator begin() {
+        return iterator(head.get(), tail.get());
+    }
+    iterator end() {
+        return iterator(nullptr, tail.get());
+    }
+    const_iterator begin() const {
+        return const_iterator(head.get(), tail.get());
+    }
+    const_iterator end() const {
+        return const_iterator(nullptr, tail.get());
+    }
+    const_iterator cbegin() const {
+        return const_iterator(head.get(), tail.get());
+    }
+    const_iterator cend() const {
+        return const_iterator(nullptr, tail.get());
+    }
+
     // Default constructor
     DoublyLinkedList() : head(nullptr), tail(nullptr), count(0) {}
 
@@ -437,121 +553,5 @@ public:
             }
         }
         return false;
-    }
-
-    // Iterator for non-const access
-    class iterator {
-        friend class DoublyLinkedList;
-    public:
-        using value_type = std::pair<Key, Value>;
-        using pointer = value_type*;
-        using reference = value_type&;
-        using difference_type = std::ptrdiff_t;
-        using iterator_category = std::bidirectional_iterator_tag;
-
-        iterator(Node* ptr, Node* tailPtr) : current(ptr), tail(tailPtr) {}
-
-        reference operator*() const { return current->data; }
-        pointer operator->() const { return &(current->data); }
-
-        // Prefix increment
-        iterator& operator++() {
-            if (current)
-                current = current->next.get();
-            return *this;
-        }
-        // Postfix increment
-        iterator operator++(int) {
-            iterator temp = *this;
-            ++(*this);
-            return temp;
-        }
-        // Prefix decrement
-        iterator& operator--() {
-            if (!current) { 
-                current = tail;
-            }
-            else {
-                current = current->prev.lock().get();
-            }
-            return *this;
-        }
-        // Postfix decrement
-        iterator operator--(int) {
-            iterator temp = *this;
-            --(*this);
-            return temp;
-        }
-        bool operator==(const iterator& other) const { return current == other.current; }
-        bool operator!=(const iterator& other) const { return current != other.current; }
-
-    private:
-        Node* current;
-        Node* tail; 
-    };
-
-    // Iterator for const access
-    class const_iterator {
-        friend class DoublyLinkedList;
-    public:
-        using value_type = const std::pair<Key, Value>;
-        using pointer = const value_type*;
-        using reference = const value_type&;
-        using difference_type = std::ptrdiff_t;
-        using iterator_category = std::bidirectional_iterator_tag;
-
-        const_iterator(const Node* ptr, const Node* tailPtr) : current(ptr), tail(tailPtr) {}
-
-        reference operator*() const { return current->data; }
-        pointer operator->() const { return &(current->data); }
-
-        const_iterator& operator++() {
-            if (current)
-                current = current->next.get();
-            return *this;
-        }
-        const_iterator operator++(int) {
-            const_iterator temp = *this;
-            ++(*this);
-            return temp;
-        }
-        const_iterator& operator--() {
-            if (!current)
-                current = tail;
-            else
-                current = current->prev.lock().get();
-            return *this;
-        }
-        const_iterator operator--(int) {
-            const_iterator temp = *this;
-            --(*this);
-            return temp;
-        }
-        bool operator==(const const_iterator& other) const { return current == other.current; }
-        bool operator!=(const const_iterator& other) const { return current != other.current; }
-
-    private:
-        const Node* current;
-        const Node* tail;
-    };
-
-    // begin/end functions for iterator support
-    iterator begin() {
-        return iterator(head.get(), tail.get());
-    }
-    iterator end() {
-        return iterator(nullptr, tail.get());
-    }
-    const_iterator begin() const {
-        return const_iterator(head.get(), tail.get());
-    }
-    const_iterator end() const {
-        return const_iterator(nullptr, tail.get());
-    }
-    const_iterator cbegin() const {
-        return const_iterator(head.get(), tail.get());
-    }
-    const_iterator cend() const {
-        return const_iterator(nullptr, tail.get());
     }
 };

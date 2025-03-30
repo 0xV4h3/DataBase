@@ -102,135 +102,7 @@ private:
     }
 
 public:
-    explicit ConcurrentHashMap() : ConcurrentHashMap(DEFAULT_TABLE_SIZE) {}
-
-    explicit ConcurrentHashMap(size_t table_size) {
-        setBucketCount(table_size);
-        initialization();
-        setSeed();
-    }
-
-    ConcurrentHashMap(const ConcurrentHashMap& other) {
-        std::shared_lock globalLock(other.global_mtx);
-        bucket_count = other.bucket_count;
-        seed = other.seed;
-        elements = other.elements.load();
-        buckets.resize(bucket_count);
-        for (size_t i = 0; i < bucket_count; ++i) {
-            std::shared_lock bucketLock(other.buckets[i].mtx);
-            buckets[i] = other.buckets[i];
-        }
-    }
-
-    ConcurrentHashMap(ConcurrentHashMap&& other) noexcept {
-        std::unique_lock globalLock(other.global_mtx);
-        bucket_count = other.bucket_count;
-        seed = other.seed;
-        elements = other.elements.load();
-        buckets = std::move(other.buckets);
-        other.bucket_count = 0;
-        other.elements = 0;
-    }
-
-    ConcurrentHashMap& operator=(const ConcurrentHashMap& other) {
-        if (this != &other) {
-            std::unique_lock globalLock1(global_mtx, std::defer_lock);
-            std::shared_lock globalLock2(other.global_mtx, std::defer_lock);
-            std::lock(globalLock1, globalLock2);
-
-            bucket_count = other.bucket_count;
-            seed = other.seed;
-            elements = other.elements.load();
-            buckets.resize(bucket_count);
-            for (size_t i = 0; i < bucket_count; ++i) {
-                std::shared_lock bucketLock(other.buckets[i].mtx);
-                buckets[i] = other.buckets[i];
-            }
-        }
-        return *this;
-    }
-
-    ConcurrentHashMap& operator=(ConcurrentHashMap&& other) noexcept {
-        if (this != &other) {
-            std::unique_lock globalLock1(global_mtx, std::defer_lock);
-            std::unique_lock globalLock2(other.global_mtx, std::defer_lock);
-            std::lock(globalLock1, globalLock2);
-
-            bucket_count = other.bucket_count;
-            seed = other.seed;
-            elements = other.elements.load();
-            buckets = std::move(other.buckets);
-            other.bucket_count = 0;
-            other.elements = 0;
-        }
-        return *this;
-    }
-
-    ~ConcurrentHashMap() {
-        clear();
-    }
-
-    void insert(const Key& key, const Value& value) {
-        size_t index = hash(key);
-        {
-            std::unique_lock bucketLock(buckets[index].mtx);
-            buckets[index].list.push_front(key, value);
-        }
-        elements.fetch_add(1);
-        rehash_if_needed();
-    }
-
-    std::optional<Value> remove(const Key& key) {
-        size_t index = hash(key);
-        std::unique_lock bucketLock(buckets[index].mtx);
-        for (auto it = buckets[index].list.begin(); it != buckets[index].list.end(); ++it) {
-            if (it->first == key) {
-                Value value = it->second;
-                buckets[index].list.erase(it);
-                elements.fetch_sub(1);
-                return value;
-            }
-        }
-        return std::nullopt;
-    }
-
-    std::optional<Value> search(const Key& key) const {
-        size_t index = hash(key);
-        std::shared_lock bucketLock(buckets[index].mtx);
-        for (auto it = buckets[index].list.begin(); it != buckets[index].list.end(); ++it) {
-            if (it->first == key) {
-                return it->second;
-            }
-        }
-        return std::nullopt;
-    }
-
-    void clear() {
-        std::unique_lock globalLock(global_mtx);
-        for (auto& bucket : buckets) {
-            std::unique_lock bucketLock(bucket.mtx);
-            bucket.list.clear();
-        }
-        elements.store(0);
-    }
-
-    void resize(size_t new_size) {
-        std::unique_lock globalLock(global_mtx);
-        resize_internal(new_size);
-    }
-
-    double loadFactor() const {
-        return (static_cast<double>(elements.load()) / bucket_count) * 100.0;
-    }
-
-    size_t getElementsCount() const {
-        return elements.load();
-    }
-
-    size_t getBucketCount() const {
-        return bucket_count;
-    }
-
+    // Iterator for non-const access
     class iterator {
     public:
         using value_type = std::pair<Key, Value>;
@@ -331,7 +203,7 @@ public:
         size_t bucketIndex;
         typename SinglyLinkedList<Key, Value>::iterator listIt;
     };
-
+    // Iterator for const access
     class const_iterator {
     public:
         using value_type = const std::pair<Key, Value>;
@@ -460,5 +332,134 @@ public:
     }
     const_iterator cend() const {
         return end();
+    }
+
+    explicit ConcurrentHashMap() : ConcurrentHashMap(DEFAULT_TABLE_SIZE) {}
+
+    explicit ConcurrentHashMap(size_t table_size) {
+        setBucketCount(table_size);
+        initialization();
+        setSeed();
+    }
+
+    ConcurrentHashMap(const ConcurrentHashMap& other) {
+        std::shared_lock globalLock(other.global_mtx);
+        bucket_count = other.bucket_count;
+        seed = other.seed;
+        elements = other.elements.load();
+        buckets.resize(bucket_count);
+        for (size_t i = 0; i < bucket_count; ++i) {
+            std::shared_lock bucketLock(other.buckets[i].mtx);
+            buckets[i] = other.buckets[i];
+        }
+    }
+
+    ConcurrentHashMap(ConcurrentHashMap&& other) noexcept {
+        std::unique_lock globalLock(other.global_mtx);
+        bucket_count = other.bucket_count;
+        seed = other.seed;
+        elements = other.elements.load();
+        buckets = std::move(other.buckets);
+        other.bucket_count = 0;
+        other.elements = 0;
+    }
+
+    ConcurrentHashMap& operator=(const ConcurrentHashMap& other) {
+        if (this != &other) {
+            std::unique_lock globalLock1(global_mtx, std::defer_lock);
+            std::shared_lock globalLock2(other.global_mtx, std::defer_lock);
+            std::lock(globalLock1, globalLock2);
+
+            bucket_count = other.bucket_count;
+            seed = other.seed;
+            elements = other.elements.load();
+            buckets.resize(bucket_count);
+            for (size_t i = 0; i < bucket_count; ++i) {
+                std::shared_lock bucketLock(other.buckets[i].mtx);
+                buckets[i] = other.buckets[i];
+            }
+        }
+        return *this;
+    }
+
+    ConcurrentHashMap& operator=(ConcurrentHashMap&& other) noexcept {
+        if (this != &other) {
+            std::unique_lock globalLock1(global_mtx, std::defer_lock);
+            std::unique_lock globalLock2(other.global_mtx, std::defer_lock);
+            std::lock(globalLock1, globalLock2);
+
+            bucket_count = other.bucket_count;
+            seed = other.seed;
+            elements = other.elements.load();
+            buckets = std::move(other.buckets);
+            other.bucket_count = 0;
+            other.elements = 0;
+        }
+        return *this;
+    }
+
+    ~ConcurrentHashMap() {
+        clear();
+    }
+
+    void insert(const Key& key, const Value& value) {
+        size_t index = hash(key);
+        {
+            std::unique_lock bucketLock(buckets[index].mtx);
+            buckets[index].list.push_front(key, value);
+        }
+        elements.fetch_add(1);
+        rehash_if_needed();
+    }
+
+    std::optional<Value> remove(const Key& key) {
+        size_t index = hash(key);
+        std::unique_lock bucketLock(buckets[index].mtx);
+        for (auto it = buckets[index].list.begin(); it != buckets[index].list.end(); ++it) {
+            if (it->first == key) {
+                Value value = it->second;
+                buckets[index].list.erase(it);
+                elements.fetch_sub(1);
+                return value;
+            }
+        }
+        return std::nullopt;
+    }
+
+    std::optional<Value> search(const Key& key) const {
+        size_t index = hash(key);
+        std::shared_lock bucketLock(buckets[index].mtx);
+        for (auto it = buckets[index].list.begin(); it != buckets[index].list.end(); ++it) {
+            if (it->first == key) {
+                return it->second;
+            }
+        }
+        return std::nullopt;
+    }
+
+    void clear() {
+        std::unique_lock globalLock(global_mtx);
+        for (auto& bucket : buckets) {
+            std::unique_lock bucketLock(bucket.mtx);
+            bucket.list.clear();
+        }
+        elements.store(0);
+    }
+
+    void resize(size_t new_size) {
+        std::unique_lock globalLock(global_mtx);
+        resize_internal(new_size);
+    }
+
+    double loadFactor() const {
+        return (static_cast<double>(elements.load()) / bucket_count) * 100.0;
+    }
+
+    size_t getElementsCount() const {
+        return elements.load();
+    }
+
+    size_t getBucketCount() const {
+        return bucket_count;
     }
 };
