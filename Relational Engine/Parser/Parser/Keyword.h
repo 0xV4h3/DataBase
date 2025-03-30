@@ -1,0 +1,31 @@
+#pragma once
+
+enum class Keyword {
+    SELECT,
+    FROM,
+    WHERE,
+    INSERT,
+    UPDATE,
+    DELETE,
+    CREATE,
+    DROP,
+    ALTER,
+    JOIN,
+    ON,
+    GROUP,
+    BY,
+    HAVING,
+    ORDER,
+    LIMIT,
+    OFFSET,
+    UNION,
+    ALL,
+    DISTINCT,
+    AS,
+    IN,
+    IS,
+    NULL_KEYWORD, 
+    TRUE_KEYWORD,
+    FALSE_KEYWORD,
+    UNKNOWN
+};
