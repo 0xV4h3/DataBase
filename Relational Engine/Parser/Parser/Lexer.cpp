@@ -51,6 +51,21 @@ Keyword Lexer::getKeyword(const std::string& word) {
     return (it != keywordMap.end()) ? it->second : Keyword::UNKNOWN;
 }
 
+TokenType Lexer::determineKeywordType(const std::string& word) {
+    Keyword kw = getKeyword(word);
+    return (kw != Keyword::UNKNOWN) ? TokenType::KEYWORD : TokenType::IDENTIFIER;
+}
+
+TokenType Lexer::determineKeywordType(const size_t& start) {
+    size_t temp = start;
+    std::string word;
+    while (temp < input.size() && (std::isalnum(input[temp]) || input[temp] == '_')) {
+        word.push_back(input[temp]);
+        temp++;
+    }
+    return determineKeywordType(word);
+}
+
 TokenType Lexer::determineTokenType(const std::string& word) {
 
 }

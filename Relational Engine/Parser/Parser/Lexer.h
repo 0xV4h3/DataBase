@@ -17,7 +17,12 @@ private:
     static const std::unordered_map<std::string, Keyword> keywordMap;
 
     static std::unordered_map<std::string, Keyword> createKeywordMap();
+    TokenType determineTokenType(const size_t& start);
     TokenType determineTokenType(const std::string& word);
+
+    TokenType determineKeywordType(const size_t& start);
+    TokenType determineKeywordType(const std::string& word);
+
     void skipWhitespace();
 
     // keyword or Identifier reading methods
