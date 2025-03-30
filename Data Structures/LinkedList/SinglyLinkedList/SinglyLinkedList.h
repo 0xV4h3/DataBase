@@ -201,6 +201,26 @@ public:
         ++count;
     }
 
+    iterator insert(iterator pos, const Key& key, const Value& value) {
+        std::unique_lock lock(mtx);
+        if (pos.current == head.get()) {
+            push_front_internal(key, value);
+            return iterator(head.get());
+        }
+        Node* prev = head.get();
+        while (prev && prev->next.get() != pos.current) {
+            prev = prev->next.get();
+        }
+        if (!prev) {
+            throw std::out_of_range("Invalid iterator in insert()");
+        }
+        auto new_node = std::make_shared<Node>(key, value);
+        new_node->next = prev->next;
+        prev->next = new_node;
+        ++count;
+        return iterator(new_node.get());
+    }
+
     void erase(size_t pos) {
         std::unique_lock lock(mtx);
         if (pos >= count)
@@ -223,6 +243,31 @@ public:
             tail = current;
         }
         --count;
+    }
+
+    iterator erase(iterator pos) {
+        std::unique_lock lock(mtx);
+        if (!head) {
+            throw std::out_of_range("List is empty");
+        }
+        if (head.get() == pos.current) {
+            pop_front_internal();
+            return iterator(head.get());
+        }
+        if (pos.current == tail.get()) {
+            pop_back_internal();
+            return iterator(nullptr);
+        }
+        Node* prev = head.get();
+        while (prev && prev->next.get() != pos.current) {
+            prev = prev->next.get();
+        }
+        if (!prev) {
+            throw std::out_of_range("Invalid iterator in erase()");
+        }
+        prev->next = pos.current->next;
+        --count;
+        return iterator(prev->next.get());
     }
 
     void erase(size_t first, size_t last) {
@@ -401,6 +446,7 @@ public:
 
     // Iterator for non-const access
     class iterator {
+        friend class SinglyLinkedList;
     public:
         using value_type = std::pair<Key, Value>;
         using pointer = value_type*;
@@ -430,6 +476,7 @@ public:
 
     // Iterator for const access
     class const_iterator {
+        friend class SinglyLinkedList;
     public:
         using value_type = const std::pair<Key, Value>;
         using pointer = const value_type*;

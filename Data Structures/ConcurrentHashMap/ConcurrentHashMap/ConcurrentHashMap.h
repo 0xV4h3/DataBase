@@ -88,9 +88,8 @@ private:
 
         for (size_t i = 0; i < bucket_count; ++i) {
             std::unique_lock bucketLock(buckets[i].mtx);
-            size_t bucketSize = buckets[i].list.size();
-            for (size_t j = 0; j < bucketSize; ++j) {
-                auto element = buckets[i].list[j]; 
+            for (auto it = buckets[i].list.begin(); it != buckets[i].list.end(); ++it) {
+                auto element = *it;
                 size_t new_index = hash_with_bucket_count(element.first, new_bucket_count);
                 {
                     std::unique_lock newBucketLock(new_buckets[new_index].mtx);
@@ -184,12 +183,13 @@ public:
     std::optional<Value> remove(const Key& key) {
         size_t index = hash(key);
         std::unique_lock bucketLock(buckets[index].mtx);
-        auto indexOpt = buckets[index].list.find_index_by_key(key);
-        if (indexOpt.has_value()) {
-            Value value = buckets[index].list[indexOpt.value()].second;
-            buckets[index].list.erase(indexOpt.value());
-            elements.fetch_sub(1);
-            return value;
+        for (auto it = buckets[index].list.begin(); it != buckets[index].list.end(); ++it) {
+            if (it->first == key) {
+                Value value = it->second;
+                buckets[index].list.erase(it);
+                elements.fetch_sub(1);
+                return value;
+            }
         }
         return std::nullopt;
     }
@@ -197,9 +197,10 @@ public:
     std::optional<Value> search(const Key& key) const {
         size_t index = hash(key);
         std::shared_lock bucketLock(buckets[index].mtx);
-        auto indexOpt = buckets[index].list.find_index_by_key(key);
-        if (indexOpt.has_value()) {
-            return buckets[index].list[indexOpt.value()].second;
+        for (auto it = buckets[index].list.begin(); it != buckets[index].list.end(); ++it) {
+            if (it->first == key) {
+                return it->second;
+            }
         }
         return std::nullopt;
     }
@@ -228,5 +229,236 @@ public:
 
     size_t getBucketCount() const {
         return bucket_count;
+    }
+
+    class iterator {
+    public:
+        using value_type = std::pair<Key, Value>;
+        using pointer = value_type*;
+        using reference = value_type&;
+        using difference_type = std::ptrdiff_t;
+        using iterator_category = std::bidirectional_iterator_tag;
+
+        iterator(ConcurrentHashMap* map, size_t bucketIndex,
+            typename SinglyLinkedList<Key, Value>::iterator listIt)
+            : map(map), bucketIndex(bucketIndex), listIt(listIt) {
+        }
+
+        reference operator*() const { return *listIt; }
+        pointer operator->() const { return &(*listIt); }
+
+        // Prefix increment
+        iterator& operator++() {
+            ++listIt;
+            while (bucketIndex < map->bucket_count && listIt == map->buckets[bucketIndex].list.end()) {
+                ++bucketIndex;
+                if (bucketIndex < map->bucket_count)
+                    listIt = map->buckets[bucketIndex].list.begin();
+            }
+            return *this;
+        }
+        // Postfix increment
+        iterator operator++(int) {
+            iterator temp = *this;
+            ++(*this);
+            return temp;
+        }
+
+        // Prefix decrement
+        iterator& operator--() {
+            if (bucketIndex == map->bucket_count) {
+                size_t idx = map->bucket_count;
+                while (idx > 0) {
+                    --idx;
+                    if (map->buckets[idx].list.size() > 0) {
+                        bucketIndex = idx;
+                        auto it = map->buckets[idx].list.begin();
+                        for (; it != map->buckets[idx].list.end(); ++it) {
+                            listIt = it;
+                        }
+                        return *this;
+                    }
+                }
+                throw std::out_of_range("Cannot decrement begin iterator");
+            }
+            auto beginIt = map->buckets[bucketIndex].list.begin();
+            if (listIt != beginIt) {
+                auto temp = beginIt;
+                auto prev = beginIt;
+                while (temp != listIt) {
+                    prev = temp;
+                    ++temp;
+                }
+                listIt = prev;
+            }
+            else {
+                size_t idx = bucketIndex;
+                bool found = false;
+                while (idx > 0) {
+                    --idx;
+                    if (map->buckets[idx].list.size() > 0) {
+                        bucketIndex = idx;
+                        auto it = map->buckets[idx].list.begin();
+                        for (; it != map->buckets[idx].list.end(); ++it) {
+                            listIt = it;
+                        }
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    throw std::out_of_range("Cannot decrement begin iterator");
+                }
+            }
+            return *this;
+        }
+        // Postfix decrement
+        iterator operator--(int) {
+            iterator temp = *this;
+            --(*this);
+            return temp;
+        }
+
+        bool operator==(const iterator& other) const {
+            return map == other.map && bucketIndex == other.bucketIndex && listIt == other.listIt;
+        }
+        bool operator!=(const iterator& other) const {
+            return !(*this == other);
+        }
+
+    private:
+        ConcurrentHashMap* map;
+        size_t bucketIndex;
+        typename SinglyLinkedList<Key, Value>::iterator listIt;
+    };
+
+    class const_iterator {
+    public:
+        using value_type = const std::pair<Key, Value>;
+        using pointer = const value_type*;
+        using reference = const value_type&;
+        using difference_type = std::ptrdiff_t;
+        using iterator_category = std::bidirectional_iterator_tag;
+
+        const_iterator(const ConcurrentHashMap* map, size_t bucketIndex,
+            typename SinglyLinkedList<Key, Value>::const_iterator listIt)
+            : map(map), bucketIndex(bucketIndex), listIt(listIt) {
+        }
+
+        reference operator*() const { return *listIt; }
+        pointer operator->() const { return &(*listIt); }
+
+        const_iterator& operator++() {
+            ++listIt;
+            while (bucketIndex < map->bucket_count && listIt == map->buckets[bucketIndex].list.end()) {
+                ++bucketIndex;
+                if (bucketIndex < map->bucket_count)
+                    listIt = map->buckets[bucketIndex].list.begin();
+            }
+            return *this;
+        }
+        const_iterator operator++(int) {
+            const_iterator temp = *this;
+            ++(*this);
+            return temp;
+        }
+        const_iterator& operator--() {
+            if (bucketIndex == map->bucket_count) {
+                size_t idx = map->bucket_count;
+                while (idx > 0) {
+                    --idx;
+                    if (map->buckets[idx].list.size() > 0) {
+                        bucketIndex = idx;
+                        auto it = map->buckets[idx].list.begin();
+                        for (; it != map->buckets[idx].list.end(); ++it) {
+                            listIt = it;
+                        }
+                        return *this;
+                    }
+                }
+                throw std::out_of_range("Cannot decrement begin iterator");
+            }
+            auto beginIt = map->buckets[bucketIndex].list.begin();
+            if (listIt != beginIt) {
+                auto temp = beginIt;
+                auto prev = beginIt;
+                while (temp != listIt) {
+                    prev = temp;
+                    ++temp;
+                }
+                listIt = prev;
+            }
+            else {
+                size_t idx = bucketIndex;
+                bool found = false;
+                while (idx > 0) {
+                    --idx;
+                    if (map->buckets[idx].list.size() > 0) {
+                        bucketIndex = idx;
+                        auto it = map->buckets[idx].list.begin();
+                        for (; it != map->buckets[idx].list.end(); ++it) {
+                            listIt = it;
+                        }
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    throw std::out_of_range("Cannot decrement begin iterator");
+                }
+            }
+            return *this;
+        }
+        const_iterator operator--(int) {
+            const_iterator temp = *this;
+            --(*this);
+            return temp;
+        }
+        bool operator==(const const_iterator& other) const {
+            return map == other.map && bucketIndex == other.bucketIndex && listIt == other.listIt;
+        }
+        bool operator!=(const const_iterator& other) const {
+            return !(*this == other);
+        }
+    private:
+        const ConcurrentHashMap* map;
+        size_t bucketIndex;
+        typename SinglyLinkedList<Key, Value>::const_iterator listIt;
+    };
+
+    // begin/end functions for iterator support
+    iterator begin() {
+        std::shared_lock lock(global_mtx);
+        size_t idx = 0;
+        while (idx < bucket_count && buckets[idx].list.empty()) {
+            ++idx;
+        }
+        if (idx == bucket_count)
+            return end();
+        return iterator(this, idx, buckets[idx].list.begin());
+    }
+    iterator end() {
+        std::shared_lock lock(global_mtx);
+        return iterator(this, bucket_count, typename SinglyLinkedList<Key, Value>::iterator(nullptr));
+    }
+    const_iterator begin() const {
+        std::shared_lock lock(global_mtx);
+        size_t idx = 0;
+        while (idx < bucket_count && buckets[idx].list.empty()) {
+            ++idx;
+        }
+        if (idx == bucket_count)
+            return end();
+        return const_iterator(this, idx, buckets[idx].list.begin());
+    }
+    const_iterator end() const {
+        std::shared_lock lock(global_mtx);
+        return const_iterator(this, bucket_count, typename SinglyLinkedList<Key, Value>::const_iterator(nullptr));
+    }
+    const_iterator cbegin() const {
+        return begin();
+    }
+    const_iterator cend() const {
+        return end();
     }
 };

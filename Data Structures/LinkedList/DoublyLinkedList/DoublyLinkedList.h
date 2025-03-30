@@ -211,6 +211,25 @@ public:
         ++count;
     }
 
+    iterator insert(iterator pos, const Key& key, const Value& value) {
+        std::unique_lock lock(mtx);
+        if (pos.current == head.get()) {
+            push_front_internal(key, value);
+            return iterator(head.get(), tail.get());
+        }
+        auto new_node = std::make_shared<Node>(key, value);
+        Node* curr = pos.current;
+        Node* prev = curr->prev.lock().get();
+        new_node->next = curr;
+        new_node->prev = prev;
+        if (prev) {
+            prev->next = new_node;
+        }
+        curr->prev = new_node;
+        ++count;
+        return iterator(new_node.get(), tail.get());
+    }
+
     void erase(size_t pos) {
         std::unique_lock lock(mtx);
         if (pos >= count)
@@ -234,6 +253,28 @@ public:
         if (nxt)
             nxt->prev = prev;
         --count;
+    }
+
+    iterator erase(iterator pos) {
+        std::unique_lock lock(mtx);
+        if (!head) {
+            throw std::out_of_range("List is empty");
+        }
+        if (head.get() == pos.current) {
+            pop_front_internal();
+            return iterator(head.get(), tail.get());
+        }
+        if (pos.current == tail.get()) {
+            pop_back_internal();
+            return iterator(nullptr, tail.get());
+        }
+        Node* prev = pos.current->prev.lock().get();
+        prev->next = pos.current->next;
+        if (pos.current->next) {
+            pos.current->next->prev = prev;
+        }
+        --count;
+        return iterator(prev->next.get(), tail.get());
     }
 
     void erase(size_t first, size_t last) {
@@ -400,6 +441,7 @@ public:
 
     // Iterator for non-const access
     class iterator {
+        friend class DoublyLinkedList;
     public:
         using value_type = std::pair<Key, Value>;
         using pointer = value_type*;
@@ -450,6 +492,7 @@ public:
 
     // Iterator for const access
     class const_iterator {
+        friend class DoublyLinkedList;
     public:
         using value_type = const std::pair<Key, Value>;
         using pointer = const value_type*;
