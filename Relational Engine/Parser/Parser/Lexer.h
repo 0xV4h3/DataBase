@@ -13,28 +13,31 @@ private:
     std::string input;
     size_t pos;
     static const std::unordered_map<std::string, Keyword> keywordMap;
-
     static std::unordered_map<std::string, Keyword> createKeywordMap();
 
-    // Token type 
+    // Determine token type by position or word
     TokenType determineTokenType(const size_t& start);
     TokenType determineTokenType(const std::string& word);
-    // Keyword type 
+
+    // Determine keyword type
     Keyword determineKeywordType(const size_t& start);
     Keyword determineKeywordType(const std::string& word);
-    // Literal type 
+
+    // Determine literal type
     LiteralType determineLiteralType(const size_t& start);
     LiteralType determineLiteralType(const std::string& word);
-    // Operator type
+
+    // Determine operator type
     Operator determineOperatorType(const size_t& start);
     Operator determineOperatorType(const std::string& word);
-    // Symbol type
+
+    // Determine symbol type (separator)
     Symbol determineSymbolType(const size_t& start);
     Symbol determineSymbolType(const std::string& word);
 
     void skipWhitespace();
 
-    // Literal types chech
+    // Functions to check literal formats
     bool isStringLiteral(const std::string& word);
     bool isCharLiteral(const std::string& word);
     bool isIntegerLiteral(const std::string& word);
@@ -54,4 +57,9 @@ public:
     std::unique_ptr<Token> nextToken();
     std::unique_ptr<Token> peekToken();
 
+    // Utility functions to convert enum values to string
+    static std::string tokenTypeToString(TokenType type);
+    static std::string literalTypeToString(LiteralType type);
+    static std::string operatorToString(Operator op);
+    static std::string symbolToString(Symbol sym);
 };

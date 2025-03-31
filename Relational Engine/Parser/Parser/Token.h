@@ -9,7 +9,7 @@ enum class TokenType {
     OPERATOR, // +, -, *, /, %,  =, <, >, <=, >=, <>
     SYMBOL, // ','  , ';' , '()' , '{}', '[]'  
     END_OF_FILE, // input stream end
-    UNKNOWN // unknown token
+    UNKNOWN 
 };
 
 enum class Keyword {
@@ -55,7 +55,7 @@ enum class LiteralType {
     JSON,     // '{ "key": "value" }'
     BOOLEAN,  // TRUE, FALSE
     NULL_VALUE, // NULL 
-    UNKNOWN   // unknown literal
+    UNKNOWN   
 };
 
 enum class Operator {
