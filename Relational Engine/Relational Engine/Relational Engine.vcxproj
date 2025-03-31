@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{87ba3ac1-6b2e-4f02-afbc-28db979b262d}</ProjectGuid>
-    <RootNamespace>SemanticAnalyzer</RootNamespace>
+    <ProjectGuid>{6fa7ca6c-9b93-42c9-b1ca-5e7144cd92e2}</ProjectGuid>
+    <RootNamespace>RelationalEngine</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -105,6 +105,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>D:\Visual Studio\DataBase\Relational Engine\Lexer;D:\Visual Studio\DataBase\Relational Engine\Parser;D:\Visual Studio\DataBase\Relational Engine\Semantic Analyzer;D:\Visual Studio\DataBase\Relational Engine\Optimizer;D:\Visual Studio\DataBase\Relational Engine\Query Processor;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -128,10 +129,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Analyzer.h" />
+    <ClInclude Include="RelationalEngine.h" />
+    <ClInclude Include="SessionManager.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="SemanticAnalyzer.cpp" />
+    <ClCompile Include="RelationalEngine.cpp" />
+    <ClCompile Include="SessionManager.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
