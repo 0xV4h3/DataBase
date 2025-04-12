@@ -2,10 +2,10 @@
 
 Session::Session(const uint64_t& SessionID) {
     id = SessionID;
-    parser = std::make_unique<Parser>(Parser());
-    analizer = std::make_unique<Analyzer>(Analyzer());
-    optimizer = std::make_unique<Optimizer>(Optimizer());
-    processor = std::make_unique<Processor>(Processor());
+    //parser = std::make_unique<Parser>(Parser());
+    //analizer = std::make_unique<Analyzer>(Analyzer());
+    //optimizer = std::make_unique<Optimizer>(Optimizer());
+    //processor = std::make_unique<Processor>(Processor());
 }
 
 Session::Session(const uint64_t SessionID, const std::string& query) : Session(SessionID) {
