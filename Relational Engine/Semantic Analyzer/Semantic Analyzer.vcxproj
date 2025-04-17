@@ -131,7 +131,7 @@
     <ClInclude Include="Analyzer.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="SemanticAnalyzer.cpp" />
+    <ClCompile Include="Analyzer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

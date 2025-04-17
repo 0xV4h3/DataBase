@@ -24,10 +24,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RelationalEngine.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
     </ClCompile>
     <ClCompile Include="SessionManager.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

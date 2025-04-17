@@ -20,8 +20,8 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="SemanticAnalyzer.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Analyzer.cpp">
+      <Filter>Header Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
