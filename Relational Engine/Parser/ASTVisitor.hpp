@@ -1,11 +1,17 @@
+// File: ASTVisitor.hpp
+// Purpose: Declares the ASTVisitor interface for traversing and operating on AST nodes.
+
 #pragma once
 
+// Forward declarations of all AST node types.
 class ASTNode;
 class LiteralNode;
 class IdentifierNode;
 class StarNode;
 class ParenthesizedExprNode;
 class SubqueryExprNode;
+class ExistsExprNode;
+class QuantifiedSubqueryNode;
 class FunctionCallNode;
 class OperatorNode;
 class CaseExpressionNode;
@@ -21,7 +27,10 @@ class SetOperationNode;
 class SelectStatementNode;
 class QueryRootNode;
 
-// Visitor interface for the AST
+/**
+ * @brief Visitor interface for the AST (visitor pattern).
+ *        Override relevant visit methods to operate on specific node types.
+ */
 class ASTVisitor {
 public:
     virtual ~ASTVisitor() = default;
@@ -31,6 +40,8 @@ public:
     virtual void visit(StarNode&) {}
     virtual void visit(ParenthesizedExprNode&) {}
     virtual void visit(SubqueryExprNode&) {}
+    virtual void visit(ExistsExprNode&) {}
+    virtual void visit(QuantifiedSubqueryNode&) {}
     virtual void visit(FunctionCallNode&) {}
     virtual void visit(OperatorNode&) {}
     virtual void visit(CaseExpressionNode&) {}

@@ -1,26 +1,43 @@
+// File: ASTNodes.cpp
+// Purpose: Implements the toString and accept methods for SQL AST node types.
+
 #include "ASTNodes.hpp"
 #include <sstream>
 
 // ===================== Literals, Identifiers, Stars ======================
+
 std::string LiteralNode::toString() const {
     return "'" + value + "'";
 }
+
 std::string IdentifierNode::toString() const {
     return name;
 }
+
 std::string StarNode::toString() const {
     return tableName ? *tableName + ".*" : "*";
 }
 
-// ===================== Parenthesized, SubqueryExpr ======================
+// ===================== Parenthesized, SubqueryExpr, Exists, Quantified ======================
+
 std::string ParenthesizedExprNode::toString() const {
     return "(" + (expr ? expr->toString() : "") + ")";
 }
+
 std::string SubqueryExprNode::toString() const {
     return "(" + (subquery ? subquery->toString() : "") + ")";
 }
 
+std::string ExistsExprNode::toString() const {
+    return (isNot ? "NOT EXISTS (" : "EXISTS (") + (subquery ? subquery->toString() : "") + ")";
+}
+
+std::string QuantifiedSubqueryNode::toString() const {
+    return quantifier + " (" + (subquery ? subquery->toString() : "") + ")";
+}
+
 // ===================== Function Call ======================
+
 std::string FunctionCallNode::toString() const {
     std::ostringstream oss;
     oss << functionName << "(";
@@ -33,6 +50,7 @@ std::string FunctionCallNode::toString() const {
 }
 
 // ===================== Operator ======================
+
 std::string OperatorNode::toString() const {
     if (!left && !right) return op;
     if (!right) return op + (left ? " " + left->toString() : "");
@@ -41,6 +59,7 @@ std::string OperatorNode::toString() const {
 }
 
 // ===================== CASE Expression ======================
+
 std::string CaseExpressionNode::toString() const {
     std::ostringstream oss;
     oss << "CASE ";
@@ -56,6 +75,7 @@ std::string CaseExpressionNode::toString() const {
 }
 
 // ===================== Select Item ======================
+
 std::string SelectItemNode::toString() const {
     std::ostringstream oss;
     oss << (expr ? expr->toString() : "");
@@ -64,6 +84,7 @@ std::string SelectItemNode::toString() const {
 }
 
 // ===================== Table Reference ======================
+
 std::string TableReferenceNode::toString() const {
     if (subquery) {
         std::ostringstream oss;
@@ -78,6 +99,7 @@ std::string TableReferenceNode::toString() const {
 }
 
 // ===================== Join ======================
+
 std::string JoinNode::toString() const {
     std::ostringstream oss;
     oss << (left ? left->toString() : "") << " " << joinType << " JOIN "
@@ -87,6 +109,7 @@ std::string JoinNode::toString() const {
 }
 
 // ===================== Where, GroupBy, Having, OrderBy, Limit ======================
+
 std::string WhereNode::toString() const {
     return "WHERE " + (condition ? condition->toString() : "");
 }
@@ -120,6 +143,7 @@ std::string LimitNode::toString() const {
 }
 
 // ===================== Set Operation ======================
+
 std::string SetOperationNode::toString() const {
     std::ostringstream oss;
     if (left) oss << left->toString() << " ";
@@ -134,6 +158,7 @@ std::string SetOperationNode::toString() const {
 }
 
 // ===================== Select Statement ======================
+
 std::string SelectStatementNode::toString() const {
     std::ostringstream oss;
     oss << "SELECT ";
@@ -162,6 +187,7 @@ std::string SelectStatementNode::toString() const {
 }
 
 // ===================== Query Root ======================
+
 std::string QueryRootNode::toString() const {
     return child ? child->toString() : "";
 }

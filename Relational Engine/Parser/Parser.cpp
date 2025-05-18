@@ -1,13 +1,17 @@
+// File: Parser.cpp
+// Purpose: Implements the SQL Parser, building an AST from a vector of tokens.
+
 #include "Parser.hpp"
 #include <sstream>
 #include <cctype>
 
-// --- Constructor ---
+// === Construction ===
+
 Parser::Parser(const std::vector<Token>& tokens)
     : tokens(tokens), pos(0), ast(nullptr) {
 }
 
-// --- Navigation helpers ---
+// === Navigation helpers ===
 
 const Token& Parser::currentToken() const {
     if (pos < tokens.size())
@@ -59,7 +63,6 @@ void Parser::expect(TokenType type, const std::string& value, const std::string&
         error(errorMsg);
 }
 
-// --- Error handling ---
 [[noreturn]] void Parser::error(const std::string& message) const {
     std::ostringstream oss;
     oss << "Parse error at token "
@@ -68,7 +71,8 @@ void Parser::expect(TokenType type, const std::string& value, const std::string&
     throw std::runtime_error(oss.str());
 }
 
-// --- Multi-token keyword helpers ---
+// === Multi-token keyword helpers ===
+
 bool Parser::matchKeywordSeq(const std::vector<std::string>& keywords) {
     size_t tempPos = pos;
     for (const auto& kw : keywords) {
@@ -82,7 +86,8 @@ bool Parser::matchKeywordSeq(const std::vector<std::string>& keywords) {
     return true;
 }
 
-// --- Top-level parsing ---
+// === Main entry point ===
+
 void Parser::parse() {
     std::unique_ptr<ASTNode> root = parseQuery();
     ast = std::make_unique<AST>(std::move(root));
@@ -95,6 +100,8 @@ const AST* Parser::getAST() const {
 AST* Parser::getAST() {
     return ast.get();
 }
+
+// === Top-level parsing ===
 
 std::unique_ptr<ASTNode> Parser::parseQuery() {
     // Handle SELECT and set operations (UNION, INTERSECT, EXCEPT)
@@ -134,14 +141,14 @@ std::unique_ptr<ASTNode> Parser::parseSetOperation(std::unique_ptr<ASTNode> left
     return std::make_unique<QueryRootNode>(std::move(left));
 }
 
+// === SELECT statement and clauses parsing ===
+
 std::unique_ptr<SelectStatementNode> Parser::parseSelectStatement() {
     auto node = std::make_unique<SelectStatementNode>();
 
-    // DISTINCT
     if (match(TokenType::KEYWORD, "DISTINCT"))
         node->distinct = true;
 
-    // TOP N (if present)
     if (match(TokenType::KEYWORD, "TOP")) {
         if (currentToken().getType() == TokenType::LITERAL) {
             node->topN = std::stoi(currentToken().getValue());
@@ -152,29 +159,17 @@ std::unique_ptr<SelectStatementNode> Parser::parseSelectStatement() {
         }
     }
 
-    // SELECT list
     node->selectItems = parseSelectList();
 
-    // FROM clause
     if (match(TokenType::KEYWORD, "FROM")) {
         node->from = parseFromClause();
-        // JOINs (attached to FROM tables)
         node->joins = parseJoinClauses(node->from);
     }
 
-    // WHERE
     node->where = parseWhereClause();
-
-    // GROUP BY
     node->groupBy = parseGroupByClause();
-
-    // HAVING
     node->having = parseHavingClause();
-
-    // ORDER BY
     node->orderBy = parseOrderByClause();
-
-    // LIMIT/OFFSET
     node->limit = parseLimitClause();
 
     return node;
@@ -189,7 +184,6 @@ std::vector<std::unique_ptr<SelectItemNode>> Parser::parseSelectList() {
 }
 
 std::unique_ptr<SelectItemNode> Parser::parseSelectItem() {
-    // Handles: expr [AS alias]
     auto expr = parseExpression();
     std::optional<std::string> alias;
     if (match(TokenType::KEYWORD, "AS")) {
@@ -202,7 +196,6 @@ std::unique_ptr<SelectItemNode> Parser::parseSelectItem() {
         }
     }
     else if (currentToken().getType() == TokenType::IDENTIFIER) {
-        // Alias without AS (optional)
         alias = currentToken().getValue();
         advance();
     }
@@ -218,9 +211,7 @@ std::vector<std::unique_ptr<TableReferenceNode>> Parser::parseFromClause() {
 }
 
 std::unique_ptr<TableReferenceNode> Parser::parseTableReference() {
-    // Table name or subquery
     if (match(TokenType::PUNCTUATOR, "(")) {
-        // Subquery as table source
         auto subquery = parseQuery();
         expect(TokenType::PUNCTUATOR, ")", "Expected ) after subquery in FROM");
         auto alias = parseOptionalAlias();
@@ -259,7 +250,6 @@ std::optional<std::string> Parser::parseOptionalAlias() {
 std::vector<std::unique_ptr<JoinNode>> Parser::parseJoinClauses(std::vector<std::unique_ptr<TableReferenceNode>>& tables) {
     std::vector<std::unique_ptr<JoinNode>> joins;
     while (true) {
-        // Support multi-token join types (LEFT OUTER JOIN, RIGHT JOIN, etc.)
         std::string joinType;
         if (matchKeywordSeq({ "INNER", "JOIN" })) {
             joinType = "INNER";
@@ -292,21 +282,17 @@ std::vector<std::unique_ptr<JoinNode>> Parser::parseJoinClauses(std::vector<std:
             break;
         }
 
-        // Next: right side table
         auto right = parseTableReference();
 
-        // ON condition
         expect(TokenType::KEYWORD, "ON", "Expected ON after JOIN");
         auto onExpr = parseExpression();
 
-        // Left side is last table in tables vector
         if (tables.empty())
             error("No table to join from (JOIN clause)");
         auto left = std::move(tables.back());
         tables.pop_back();
         joins.push_back(std::make_unique<JoinNode>(joinType, std::move(left), std::move(right), std::move(onExpr)));
-        // For chaining, treat the join as the new left table for subsequent joins
-        tables.push_back(std::make_unique<TableReferenceNode>(joins.back()->toString(), std::nullopt)); // Dummy node for chaining
+        tables.push_back(std::make_unique<TableReferenceNode>(joins.back()->toString(), std::nullopt));
     }
     return joins;
 }
@@ -353,7 +339,7 @@ std::unique_ptr<OrderByNode> Parser::parseOrderByClause() {
                 item.ascending = false;
             }
             else {
-                item.ascending = true; // Default
+                item.ascending = true;
             }
             node->orderItems.push_back(std::move(item));
         } while (match(TokenType::PUNCTUATOR, ","));
@@ -363,7 +349,6 @@ std::unique_ptr<OrderByNode> Parser::parseOrderByClause() {
 }
 
 std::unique_ptr<LimitNode> Parser::parseLimitClause() {
-    // LIMIT [offset,] row_count  | OFFSET n ROWS FETCH NEXT n ROWS ONLY
     if (match(TokenType::KEYWORD, "LIMIT")) {
         int limit = 0, offset = 0;
         if (currentToken().getType() == TokenType::LITERAL) {
@@ -374,7 +359,6 @@ std::unique_ptr<LimitNode> Parser::parseLimitClause() {
             error("Expected number after LIMIT.");
         }
         if (match(TokenType::PUNCTUATOR, ",")) {
-            // LIMIT offset, row_count
             if (currentToken().getType() == TokenType::LITERAL) {
                 offset = limit;
                 limit = std::stoi(currentToken().getValue());
@@ -411,7 +395,8 @@ std::unique_ptr<LimitNode> Parser::parseLimitClause() {
     return nullptr;
 }
 
-// Operator precedence table for SQL (lowest to highest)
+// === Expression parsing (Pratt/precedence climbing algorithm) ===
+
 static const struct {
     std::string op;
     int precedence;
@@ -445,42 +430,95 @@ static bool isRightAssoc(const Token& token) {
     return false;
 }
 
-// Forward declaration for recursive parsing
 std::unique_ptr<ExpressionNode> Parser::parseExpression(int precedence) {
-    // Parse a primary expression first
     std::unique_ptr<ExpressionNode> left;
 
-    // --- Primary Expressions ---
+    // --- Primary expressions ---
     if (match(TokenType::PUNCTUATOR, "(")) {
-        // Parenthesized expression or subquery
         if (currentToken().getType() == TokenType::KEYWORD && currentToken().getValue() == "SELECT") {
-            // Subquery as expression
             auto subquery = parseQuery();
             expect(TokenType::PUNCTUATOR, ")", "Expected ) after subquery");
             left = std::make_unique<SubqueryExprNode>(std::move(subquery));
         }
         else {
-            // Parenthesized normal expression
             left = std::make_unique<ParenthesizedExprNode>(parseExpression());
             expect(TokenType::PUNCTUATOR, ")", "Expected ) after expression");
         }
     }
+    // EXISTS and NOT EXISTS support
+    else if (currentToken().getType() == TokenType::KEYWORD &&
+        (currentToken().getValue() == "EXISTS" || currentToken().getValue() == "NOT")) {
+        bool isNot = false;
+        if (currentToken().getValue() == "NOT") {
+            advance();
+            if (currentToken().getType() == TokenType::KEYWORD && currentToken().getValue() == "EXISTS") {
+                isNot = true;
+            }
+            else {
+                error("Expected EXISTS after NOT");
+            }
+        }
+        if (currentToken().getValue() == "EXISTS") {
+            advance();
+            expect(TokenType::PUNCTUATOR, "(", "Expected ( after EXISTS");
+            if (currentToken().getType() == TokenType::KEYWORD && currentToken().getValue() == "SELECT") {
+                auto subquery = parseQuery();
+                expect(TokenType::PUNCTUATOR, ")", "Expected ) after EXISTS subquery");
+                left = std::make_unique<ExistsExprNode>(std::move(subquery), isNot);
+            }
+            else {
+                error("Expected SELECT after EXISTS (");
+            }
+        }
+    }
+    // ANY/ALL/SOME support as standalone (rare, but ANSI SQL allows it)
+    else if (currentToken().getType() == TokenType::KEYWORD &&
+        (currentToken().getValue() == "ANY" ||
+            currentToken().getValue() == "ALL" ||
+            currentToken().getValue() == "SOME")) {
+        std::string quant = currentToken().getValue();
+        advance();
+        expect(TokenType::PUNCTUATOR, "(", "Expected ( after " + quant);
+        if (currentToken().getType() == TokenType::KEYWORD && currentToken().getValue() == "SELECT") {
+            auto subquery = parseQuery();
+            expect(TokenType::PUNCTUATOR, ")", "Expected ) after " + quant + " subquery");
+            left = std::make_unique<QuantifiedSubqueryNode>(quant, std::move(subquery));
+        }
+        else {
+            error("Expected SELECT after " + quant + " (");
+        }
+    }
+    // Literal, Function, Identifier, Star, Unary minus, CASE
     else if (currentToken().getType() == TokenType::LITERAL) {
-        left = std::make_unique<LiteralNode>(currentToken().getValue(), "LITERAL"); // You can pass actual type if available
+        left = std::make_unique<LiteralNode>(currentToken().getValue(), "LITERAL");
         advance();
     }
+    else if (currentToken().getType() == TokenType::FUNCTION) {
+        std::string funcName = currentToken().getValue();
+        advance();
+        if (match(TokenType::PUNCTUATOR, "(")) {
+            std::vector<std::unique_ptr<ExpressionNode>> args;
+            if (!match(TokenType::PUNCTUATOR, ")")) {
+                do {
+                    args.push_back(parseExpression());
+                } while (match(TokenType::PUNCTUATOR, ","));
+                expect(TokenType::PUNCTUATOR, ")", "Expected ) after function arguments");
+            }
+            left = std::make_unique<FunctionCallNode>(funcName, std::move(args));
+        }
+        else {
+            error("Expected '(' after function name");
+        }
+    }
     else if (currentToken().getType() == TokenType::IDENTIFIER) {
-        // Identifier, function call, or Table.*
         std::string name = currentToken().getValue();
         advance();
 
         if (match(TokenType::PUNCTUATOR, ".")) {
             if (match(TokenType::OPERATOR, "*") || match(TokenType::PUNCTUATOR, "*")) {
-                // Table.*
                 left = std::make_unique<StarNode>(name);
             }
             else if (currentToken().getType() == TokenType::IDENTIFIER) {
-                // Schema.Table or Table.Column (treat as identifier chain)
                 std::string next = currentToken().getValue();
                 advance();
                 left = std::make_unique<IdentifierNode>(name + "." + next);
@@ -490,7 +528,6 @@ std::unique_ptr<ExpressionNode> Parser::parseExpression(int precedence) {
             }
         }
         else if (match(TokenType::PUNCTUATOR, "(")) {
-            // Function call
             std::vector<std::unique_ptr<ExpressionNode>> args;
             if (!match(TokenType::PUNCTUATOR, ")")) {
                 do {
@@ -501,7 +538,6 @@ std::unique_ptr<ExpressionNode> Parser::parseExpression(int precedence) {
             left = std::make_unique<FunctionCallNode>(name, std::move(args));
         }
         else {
-            // Simple identifier
             left = std::make_unique<IdentifierNode>(name);
         }
     }
@@ -509,13 +545,11 @@ std::unique_ptr<ExpressionNode> Parser::parseExpression(int precedence) {
         left = std::make_unique<StarNode>();
     }
     else if (currentToken().getType() == TokenType::OPERATOR && currentToken().getValue() == "-") {
-        // Unary minus
         advance();
-        auto right = parseExpression(7); // precedence of unary minus is high
+        auto right = parseExpression(7);
         left = std::make_unique<OperatorNode>("-", std::make_unique<LiteralNode>("0", "LITERAL"), std::move(right));
     }
     else if (currentToken().getType() == TokenType::KEYWORD && currentToken().getValue() == "CASE") {
-        // CASE WHEN ... THEN ... [ELSE ...] END
         advance();
         auto caseNode = std::make_unique<CaseExpressionNode>();
         while (currentToken().getType() == TokenType::KEYWORD && currentToken().getValue() == "WHEN") {
@@ -536,9 +570,8 @@ std::unique_ptr<ExpressionNode> Parser::parseExpression(int precedence) {
         error("Unexpected token in expression");
     }
 
-    // --- Infix Operator Parsing (Pratt/precedence climbing) ---
+    // --- Infix/postfix operators and predicates ---
     while (true) {
-        // Check if current token is an operator or a special keyword operator
         TokenType ttype = currentToken().getType();
         std::string tval = currentToken().getValue();
 
@@ -546,9 +579,9 @@ std::unique_ptr<ExpressionNode> Parser::parseExpression(int precedence) {
         if (tokenPrec < precedence)
             break;
 
-        // Special: handle BETWEEN, IN, IS, LIKE as infix
         if (ttype == TokenType::KEYWORD &&
-            (tval == "BETWEEN" || tval == "IN" || tval == "IS" || tval == "LIKE")) {
+            (tval == "BETWEEN" || tval == "IN" || tval == "IS" || tval == "LIKE" ||
+                tval == "ANY" || tval == "ALL" || tval == "SOME")) {
             std::string op = tval;
             advance();
             if (op == "BETWEEN") {
@@ -560,16 +593,14 @@ std::unique_ptr<ExpressionNode> Parser::parseExpression(int precedence) {
             }
             else if (op == "IN") {
                 if (match(TokenType::PUNCTUATOR, "(")) {
-                    // Could be value list or subquery
                     std::vector<std::unique_ptr<ExpressionNode>> inList;
                     if (currentToken().getType() == TokenType::KEYWORD && currentToken().getValue() == "SELECT") {
-                        // Subquery
+                        // IN (SELECT ...)
                         auto subquery = parseQuery();
                         expect(TokenType::PUNCTUATOR, ")", "Expected ) after IN subquery");
                         inList.push_back(std::make_unique<SubqueryExprNode>(std::move(subquery)));
                     }
                     else {
-                        // List
                         do {
                             inList.push_back(parseExpression());
                         } while (match(TokenType::PUNCTUATOR, ","));
@@ -583,7 +614,6 @@ std::unique_ptr<ExpressionNode> Parser::parseExpression(int precedence) {
                 }
             }
             else if (op == "IS") {
-                // IS [NOT] NULL
                 bool notFlag = match(TokenType::KEYWORD, "NOT");
                 if (match(TokenType::KEYWORD, "NULL")) {
                     auto right = std::make_unique<IdentifierNode>("NULL");
@@ -597,10 +627,26 @@ std::unique_ptr<ExpressionNode> Parser::parseExpression(int precedence) {
                 auto pattern = parseExpression(tokenPrec + 1);
                 left = std::make_unique<OperatorNode>("LIKE", std::move(left), std::move(pattern));
             }
+            // Scalar comparison with quantified subquery: e.g. a > ANY (SELECT ...)
+            else if (op == "ANY" || op == "ALL" || op == "SOME") {
+                if (match(TokenType::PUNCTUATOR, "(")) {
+                    if (currentToken().getType() == TokenType::KEYWORD && currentToken().getValue() == "SELECT") {
+                        auto subquery = parseQuery();
+                        expect(TokenType::PUNCTUATOR, ")", "Expected ) after " + op + " subquery");
+                        left = std::make_unique<OperatorNode>(op, std::move(left),
+                            std::make_unique<QuantifiedSubqueryNode>(op, std::move(subquery)));
+                    }
+                    else {
+                        error("Expected SELECT after " + op + " (");
+                    }
+                }
+                else {
+                    error("Expected ( after " + op);
+                }
+            }
             continue;
         }
 
-        // Standard infix operator
         if (ttype == TokenType::OPERATOR || (ttype == TokenType::KEYWORD && tokenPrec > 0)) {
             std::string op = tval;
             advance();
@@ -610,7 +656,6 @@ std::unique_ptr<ExpressionNode> Parser::parseExpression(int precedence) {
             continue;
         }
 
-        // No more binary/infix operator at this precedence
         break;
     }
 

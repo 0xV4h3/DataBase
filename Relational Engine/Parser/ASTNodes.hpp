@@ -1,3 +1,7 @@
+// File: ASTNodes.hpp
+// Purpose: Defines all AST node types for the SQL parser's Abstract Syntax Tree (AST).
+// Each node type represents a component of SQL syntax, supporting traversal, printing, and the visitor pattern.
+
 #pragma once
 
 #include <memory>
@@ -6,6 +10,11 @@
 #include <optional>
 #include "ASTVisitor.hpp"  
 
+// ===================== Base AST Node Classes =====================
+
+/**
+ * @brief Base class for all AST nodes.
+ */
 class ASTNode {
 public:
     virtual ~ASTNode() = default;
@@ -13,13 +22,20 @@ public:
     virtual void accept(ASTVisitor& visitor) { visitor.visit(*this); }
 };
 
+/**
+ * @brief Base class for all expression nodes.
+ */
 class ExpressionNode : public ASTNode {};
 
-// Literal (e.g. '123', 'abc')
+// ===================== Expression Nodes =====================
+
+/**
+ * @brief Literal value node (e.g. '123', 'abc').
+ */
 class LiteralNode : public ExpressionNode {
 public:
     std::string value;
-    std::string type; // e.g. "INTEGER", "STRING", etc.
+    std::string type;
     LiteralNode(const std::string& value, const std::string& type)
         : value(value), type(type) {
     }
@@ -27,7 +43,9 @@ public:
     void accept(ASTVisitor& visitor) override { visitor.visit(*this); }
 };
 
-// Identifier (e.g. column, table name)
+/**
+ * @brief Identifier node (e.g. column, table name).
+ */
 class IdentifierNode : public ExpressionNode {
 public:
     std::string name;
@@ -36,17 +54,21 @@ public:
     void accept(ASTVisitor& visitor) override { visitor.visit(*this); }
 };
 
-// SELECT * or Table.*
+/**
+ * @brief Represents '*' or 'table.*'.
+ */
 class StarNode : public ExpressionNode {
 public:
-    std::optional<std::string> tableName; // nullopt for *, tableName for Table.*
+    std::optional<std::string> tableName;
     StarNode() : tableName(std::nullopt) {}
     StarNode(const std::string& tbl) : tableName(tbl) {}
     std::string toString() const override;
     void accept(ASTVisitor& visitor) override { visitor.visit(*this); }
 };
 
-// Parenthesized expression (preserves grouping/precedence)
+/**
+ * @brief Parenthesized subexpression node.
+ */
 class ParenthesizedExprNode : public ExpressionNode {
 public:
     std::unique_ptr<ExpressionNode> expr;
@@ -57,7 +79,9 @@ public:
     void accept(ASTVisitor& visitor) override { visitor.visit(*this); }
 };
 
-// (Subquery as an expression, e.g. in SELECT or WHERE)
+/**
+ * @brief Subquery as an expression node.
+ */
 class SubqueryExprNode : public ExpressionNode {
 public:
     std::unique_ptr<ASTNode> subquery;
@@ -68,7 +92,37 @@ public:
     void accept(ASTVisitor& visitor) override { visitor.visit(*this); }
 };
 
-// Function call e.g. SUM(col)
+/**
+ * @brief EXISTS/NOT EXISTS predicate node (EXISTS (subquery) or NOT EXISTS (subquery))
+ */
+class ExistsExprNode : public ExpressionNode {
+public:
+    std::unique_ptr<ASTNode> subquery;
+    bool isNot;
+    ExistsExprNode(std::unique_ptr<ASTNode> subquery, bool isNot = false)
+        : subquery(std::move(subquery)), isNot(isNot) {
+    }
+    std::string toString() const override;
+    void accept(ASTVisitor& visitor) override { visitor.visit(*this); }
+};
+
+/**
+ * @brief ANY/ALL/SOME quantified subquery node (e.g. > ANY (SELECT ...))
+ */
+class QuantifiedSubqueryNode : public ExpressionNode {
+public:
+    std::string quantifier; // "ANY", "ALL", "SOME"
+    std::unique_ptr<ASTNode> subquery;
+    QuantifiedSubqueryNode(const std::string& quant, std::unique_ptr<ASTNode> subquery)
+        : quantifier(quant), subquery(std::move(subquery)) {
+    }
+    std::string toString() const override;
+    void accept(ASTVisitor& visitor) override { visitor.visit(*this); }
+};
+
+/**
+ * @brief Function call node (e.g. SUM(col)).
+ */
 class FunctionCallNode : public ExpressionNode {
 public:
     std::string functionName;
@@ -80,7 +134,9 @@ public:
     void accept(ASTVisitor& visitor) override { visitor.visit(*this); }
 };
 
-// Operator (binary or unary)
+/**
+ * @brief Operator node (unary or binary).
+ */
 class OperatorNode : public ExpressionNode {
 public:
     std::string op;
@@ -95,7 +151,9 @@ public:
     void accept(ASTVisitor& visitor) override { visitor.visit(*this); }
 };
 
-// CASE WHEN ... THEN ... ELSE ... END
+/**
+ * @brief CASE WHEN ... THEN ... ELSE ... END expression node.
+ */
 class CaseExpressionNode : public ExpressionNode {
 public:
     struct WhenThen {
@@ -108,7 +166,11 @@ public:
     void accept(ASTVisitor& visitor) override { visitor.visit(*this); }
 };
 
-// ========== SELECT List Item ==========
+// ===================== SELECT List, Table, Join =====================
+
+/**
+ * @brief Item in the SELECT list (expression [AS alias]).
+ */
 class SelectItemNode : public ASTNode {
 public:
     std::unique_ptr<ExpressionNode> expr;
@@ -120,8 +182,9 @@ public:
     void accept(ASTVisitor& visitor) override { visitor.visit(*this); }
 };
 
-// ========== Table Reference & Join ==========
-
+/**
+ * @brief Table reference or subquery in the FROM clause.
+ */
 class TableReferenceNode : public ASTNode {
 public:
     std::string tableName;
@@ -137,12 +200,15 @@ public:
     void accept(ASTVisitor& visitor) override { visitor.visit(*this); }
 };
 
+/**
+ * @brief JOIN clause node.
+ */
 class JoinNode : public ASTNode {
 public:
-    std::string joinType; // e.g. "INNER", "LEFT OUTER"
+    std::string joinType;
     std::unique_ptr<TableReferenceNode> left;
     std::unique_ptr<TableReferenceNode> right;
-    std::unique_ptr<ExpressionNode> onExpr; // ON condition
+    std::unique_ptr<ExpressionNode> onExpr;
     JoinNode(const std::string& joinType,
         std::unique_ptr<TableReferenceNode> left,
         std::unique_ptr<TableReferenceNode> right,
@@ -153,8 +219,11 @@ public:
     void accept(ASTVisitor& visitor) override { visitor.visit(*this); }
 };
 
-// ========== WHERE, GROUP BY, HAVING, ORDER BY, LIMIT ==========
+// ===================== WHERE, GROUP BY, HAVING, ORDER BY, LIMIT =====================
 
+/**
+ * @brief WHERE clause node.
+ */
 class WhereNode : public ASTNode {
 public:
     std::unique_ptr<ExpressionNode> condition;
@@ -163,6 +232,9 @@ public:
     void accept(ASTVisitor& visitor) override { visitor.visit(*this); }
 };
 
+/**
+ * @brief GROUP BY clause node.
+ */
 class GroupByNode : public ASTNode {
 public:
     std::vector<std::unique_ptr<ExpressionNode>> groupExprs;
@@ -170,6 +242,9 @@ public:
     void accept(ASTVisitor& visitor) override { visitor.visit(*this); }
 };
 
+/**
+ * @brief HAVING clause node.
+ */
 class HavingNode : public ASTNode {
 public:
     std::unique_ptr<ExpressionNode> condition;
@@ -178,6 +253,9 @@ public:
     void accept(ASTVisitor& visitor) override { visitor.visit(*this); }
 };
 
+/**
+ * @brief ORDER BY clause node.
+ */
 class OrderByNode : public ASTNode {
 public:
     struct OrderItem {
@@ -189,6 +267,9 @@ public:
     void accept(ASTVisitor& visitor) override { visitor.visit(*this); }
 };
 
+/**
+ * @brief LIMIT/OFFSET clause node.
+ */
 class LimitNode : public ASTNode {
 public:
     int limit;
@@ -198,14 +279,20 @@ public:
     void accept(ASTVisitor& visitor) override { visitor.visit(*this); }
 };
 
-// ========== Set Operations (UNION, INTERSECT, EXCEPT) ==========
+// ===================== Set Operations and Query Root =====================
 
+/**
+ * @brief Types of set operations supported (UNION/INTERSECT/EXCEPT).
+ */
 enum class SetOperationType { UNION, INTERSECT, EXCEPT };
 
+/**
+ * @brief Set operation node (e.g., UNION, INTERSECT).
+ */
 class SetOperationNode : public ASTNode {
 public:
     SetOperationType opType;
-    bool all; // e.g. UNION ALL
+    bool all;
     std::unique_ptr<ASTNode> left;
     std::unique_ptr<ASTNode> right;
     SetOperationNode(SetOperationType opType, bool all,
@@ -217,12 +304,13 @@ public:
     void accept(ASTVisitor& visitor) override { visitor.visit(*this); }
 };
 
-// ========== Main Query Node ==========
-
+/**
+ * @brief SELECT statement node (core SQL statement).
+ */
 class SelectStatementNode : public ASTNode {
 public:
     bool distinct = false;
-    std::optional<int> topN; // For TOP N queries (SQL Server style)
+    std::optional<int> topN;
     std::vector<std::unique_ptr<SelectItemNode>> selectItems;
     std::vector<std::unique_ptr<TableReferenceNode>> from;
     std::vector<std::unique_ptr<JoinNode>> joins;
@@ -236,8 +324,9 @@ public:
     void accept(ASTVisitor& visitor) override { visitor.visit(*this); }
 };
 
-// ========== Root Node for Full Query (could be a single query or set operation) ==========
-
+/**
+ * @brief Root node for a full query (single query or set operation).
+ */
 class QueryRootNode : public ASTNode {
 public:
     std::unique_ptr<ASTNode> child;

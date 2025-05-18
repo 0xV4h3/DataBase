@@ -41,5 +41,8 @@
     <ClCompile Include="AST.cpp">
       <Filter>Header Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Lexer\Lexer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
