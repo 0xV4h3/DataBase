@@ -358,11 +358,6 @@ std::unique_ptr<Token> Lexer::lexKeyword() {
     return nullptr;
 }
 
-// --- (Reserved for parser: multi-token keywords) ---
-std::unique_ptr<Token> Lexer::lexMultiTokenKeyword() {
-    return nullptr;
-}
-
 // --- Functions (must be followed by '(' and match a function name) ---
 std::unique_ptr<Token> Lexer::lexFunction() {
     size_t start = pos;
@@ -575,19 +570,6 @@ std::unique_ptr<Token> Lexer::lexPunctuator() {
     }
 
     return nullptr;
-}
-
-// --- Date/Time part (for things like DATEPART(YEAR, ...)) ---
-std::unique_ptr<Token> Lexer::lexDateTimePart() {
-    size_t start = pos;
-    while (pos < input.size() && isIdentifierPart(input[pos])) ++pos;
-    std::string word = input.substr(start, pos - start);
-    std::string upper = word;
-    std::transform(upper.begin(), upper.end(), upper.begin(), ::toupper);
-    auto it = dateTimePartsMap.find(upper);
-    if (it != dateTimePartsMap.end())
-        return std::make_unique<DateTimePartToken>(it->second, word);
-    return std::make_unique<DateTimePartToken>(DateTimePart::UNKNOWN, word);
 }
 
 // ========== Literal Recognition Utilities ==========

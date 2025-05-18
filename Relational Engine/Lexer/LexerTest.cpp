@@ -96,6 +96,13 @@ int main() {
                     << ", Punctuator: " << TokenUtils::getPunctuatorName(*punc) << ")";
             }
         }
+        // COMMENT
+        else if (token.getType() == TokenType::COMMENT) {
+            auto commentTok = dynamic_cast<const CommentToken*>(&token);
+            if (commentTok) {
+                std::cout << " (CommentType: " << LexerUtils::commentTypeToString(commentTok->commentType) << ")";
+            }
+        }
 
         std::cout << " | Position: " << token.getPosition() << std::endl;
         };

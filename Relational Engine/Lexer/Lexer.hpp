@@ -79,7 +79,6 @@ private:
     std::unique_ptr<Token> lexDotOperator();
     std::unique_ptr<Token> lexNumber();
     std::unique_ptr<Token> lexKeyword();
-    std::unique_ptr<Token> lexMultiTokenKeyword();
     std::unique_ptr<Token> lexFunction();
     std::unique_ptr<Token> lexIdentifier();
     std::unique_ptr<Token> lexDelimitedIdentifier();
@@ -87,7 +86,6 @@ private:
     std::unique_ptr<Token> lexJson();
     std::unique_ptr<Token> lexOperator();
     std::unique_ptr<Token> lexPunctuator();
-    std::unique_ptr<Token> lexDateTimePart();
 
     // === Literal Checking Methods ===
 
