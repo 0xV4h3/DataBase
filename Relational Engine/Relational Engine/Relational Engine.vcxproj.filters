@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="RelationalEngine.h">
+    <ClInclude Include="RelationalEngine.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SessionManager.h">
+    <ClInclude Include="SessionManager.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

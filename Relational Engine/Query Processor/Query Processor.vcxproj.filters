@@ -15,13 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Processor.h">
+    <ClInclude Include="Processor.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Planner.h">
+    <ClInclude Include="Planner.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Executor.h">
+    <ClInclude Include="Executor.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

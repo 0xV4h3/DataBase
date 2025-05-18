@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Lexer.h"
-#include "Parser.h"
-#include "Analyzer.h"
-#include "Optimizer.h"
-#include "Processor.h"
+#include "Lexer.hpp"
+#include "Parser.hpp"
+#include "Analyzer.hpp"
+#include "Optimizer.hpp"
+#include "Processor.hpp"
 #include <atomic>
 #include <cstdint>
 #include <string>

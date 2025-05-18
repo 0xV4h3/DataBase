@@ -15,13 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Parser.h">
+    <ClInclude Include="Parser.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AST.h">
+    <ClInclude Include="AST.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ASTNodes.h">
+    <ClInclude Include="ASTNodes.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

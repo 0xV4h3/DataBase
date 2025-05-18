@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Executor.h"
-#include "Planner.h"
+#include "Executor.hpp"
+#include "Planner.hpp"
 #include <memory>
 
 class Processor {

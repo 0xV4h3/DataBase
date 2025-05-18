@@ -128,9 +128,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Executor.h" />
-    <ClInclude Include="Planner.h" />
-    <ClInclude Include="Processor.h" />
+    <ClInclude Include="Executor.hpp" />
+    <ClInclude Include="Planner.hpp" />
+    <ClInclude Include="Processor.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Executor.cpp" />

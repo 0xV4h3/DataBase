@@ -129,8 +129,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="RelationalEngine.h" />
-    <ClInclude Include="SessionManager.h" />
+    <ClInclude Include="RelationalEngine.hpp" />
+    <ClInclude Include="SessionManager.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RelationalEngine.cpp" />

@@ -129,9 +129,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="AST.h" />
-    <ClInclude Include="ASTNodes.h" />
-    <ClInclude Include="Parser.h" />
+    <ClInclude Include="AST.hpp" />
+    <ClInclude Include="ASTNodes.hpp" />
+    <ClInclude Include="Parser.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Parser.cpp" />

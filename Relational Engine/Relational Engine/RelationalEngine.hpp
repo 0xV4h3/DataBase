@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SessionManager.h"
+#include "SessionManager.hpp"
 
 class RelationalEngine {
 private:
