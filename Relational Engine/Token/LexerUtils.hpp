@@ -171,7 +171,6 @@ public:
         case ClauseKeyword::HAVING:   return "HAVING";
         case ClauseKeyword::ORDER:    return "ORDER";
         case ClauseKeyword::UNION:    return "UNION";
-        case ClauseKeyword::ALL:      return "ALL";
         case ClauseKeyword::DISTINCT: return "DISTINCT";
         case ClauseKeyword::TOP:      return "TOP";
         case ClauseKeyword::LIMIT:    return "LIMIT";
@@ -221,6 +220,9 @@ public:
         case WordOperatorKeyword::NOT:     return "NOT";
         case WordOperatorKeyword::LIKE:    return "LIKE";
         case WordOperatorKeyword::BETWEEN: return "BETWEEN";
+        case WordOperatorKeyword::EXISTS:  return "EXISTS";
+        case WordOperatorKeyword::ALL:     return "ALL";
+        case WordOperatorKeyword::ANY:     return "ANY";
         case WordOperatorKeyword::UNKNOWN: return "UNKNOWN";
         default:                           return "UNKNOWN";
         }

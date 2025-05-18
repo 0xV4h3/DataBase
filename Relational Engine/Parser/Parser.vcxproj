@@ -131,9 +131,12 @@
   <ItemGroup>
     <ClInclude Include="AST.hpp" />
     <ClInclude Include="ASTNodes.hpp" />
+    <ClInclude Include="ASTVisitor.hpp" />
     <ClInclude Include="Parser.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AST.cpp" />
+    <ClCompile Include="ASTNodes.cpp" />
     <ClCompile Include="Parser.cpp" />
     <ClCompile Include="ParserTest.cpp" />
   </ItemGroup>

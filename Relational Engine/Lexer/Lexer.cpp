@@ -19,13 +19,12 @@ const std::unordered_map<std::string, ClauseKeyword> Lexer::clauseMap = {
     {"JOIN", ClauseKeyword::JOIN}, {"ON", ClauseKeyword::ON},
     {"GROUP", ClauseKeyword::GROUP}, {"BY", ClauseKeyword::BY},
     {"HAVING", ClauseKeyword::HAVING}, {"ORDER", ClauseKeyword::ORDER},
-    {"UNION", ClauseKeyword::UNION}, {"ALL", ClauseKeyword::ALL},
-    {"DISTINCT", ClauseKeyword::DISTINCT}, {"TOP", ClauseKeyword::TOP},
-    {"LIMIT", ClauseKeyword::LIMIT}, {"OFFSET", ClauseKeyword::OFFSET},
-    {"LEFT", ClauseKeyword::LEFT}, {"RIGHT", ClauseKeyword::RIGHT},
-    {"FULL", ClauseKeyword::FULL}, {"OUTER", ClauseKeyword::OUTER},
-    {"INNER", ClauseKeyword::INNER}, {"CROSS", ClauseKeyword::CROSS},
-    {"APPLY", ClauseKeyword::APPLY}
+    {"UNION", ClauseKeyword::UNION}, {"DISTINCT", ClauseKeyword::DISTINCT},
+    {"TOP", ClauseKeyword::TOP}, {"LIMIT", ClauseKeyword::LIMIT},
+    {"OFFSET", ClauseKeyword::OFFSET}, {"LEFT", ClauseKeyword::LEFT},
+    {"RIGHT", ClauseKeyword::RIGHT}, {"FULL", ClauseKeyword::FULL},
+    {"OUTER", ClauseKeyword::OUTER}, {"INNER", ClauseKeyword::INNER},
+    {"CROSS", ClauseKeyword::CROSS}, {"APPLY", ClauseKeyword::APPLY}
 };
 const std::unordered_map<std::string, CTEKeyword> Lexer::cteMap = {
     {"WITH", CTEKeyword::WITH}
@@ -36,7 +35,10 @@ const std::unordered_map<std::string, SetOpKeyword> Lexer::setOpMap = {
 const std::unordered_map<std::string, WordOperatorKeyword> Lexer::wordOpMap = {
     {"IN", WordOperatorKeyword::IN}, {"IS", WordOperatorKeyword::IS},
     {"NOT", WordOperatorKeyword::NOT}, {"LIKE", WordOperatorKeyword::LIKE},
-    {"BETWEEN", WordOperatorKeyword::BETWEEN}
+    {"BETWEEN", WordOperatorKeyword::BETWEEN},
+    {"EXISTS", WordOperatorKeyword::EXISTS},
+    {"ALL", WordOperatorKeyword::ALL},
+    {"ANY", WordOperatorKeyword::ANY}
 };
 const std::unordered_map<std::string, LogicalConstantKeyword> Lexer::logicalConstMap = {
     {"NULL", LogicalConstantKeyword::NULL_KEYWORD},

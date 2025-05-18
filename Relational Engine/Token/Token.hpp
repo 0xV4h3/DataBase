@@ -23,10 +23,10 @@ enum class TokenType {
 
 enum class DMLKeyword { SELECT, INSERT, UPDATE, DELETE, MERGE, EXECUTE, UNKNOWN };
 enum class DDLKeyword { CREATE, ALTER, DROP, TRUNCATE, UNKNOWN };
-enum class ClauseKeyword { FROM, WHERE, JOIN, ON, GROUP, BY, HAVING, ORDER, UNION, ALL, DISTINCT, TOP, LIMIT, OFFSET, LEFT, RIGHT, FULL, OUTER, INNER, CROSS, APPLY, UNKNOWN };
+enum class ClauseKeyword { FROM, WHERE, JOIN, ON, GROUP, BY, HAVING, ORDER, UNION, DISTINCT, TOP, LIMIT, OFFSET, LEFT, RIGHT, FULL, OUTER, INNER, CROSS, APPLY, UNKNOWN };
 enum class CTEKeyword { WITH, UNKNOWN };
 enum class SetOpKeyword { EXCEPT, INTERSECT, UNKNOWN };
-enum class WordOperatorKeyword { IN, IS, NOT, LIKE, BETWEEN, UNKNOWN };
+enum class WordOperatorKeyword { IN, IS, NOT, LIKE, BETWEEN, EXISTS, ALL, ANY, UNKNOWN };
 enum class LogicalConstantKeyword { NULL_KEYWORD, TRUE_KEYWORD, FALSE_KEYWORD, UNKNOWN };
 enum class TransactionKeyword { BEGIN, COMMIT, ROLLBACK, SAVEPOINT, UNKNOWN };
 enum class SecurityKeyword { GRANT, REVOKE, DENY, UNKNOWN };

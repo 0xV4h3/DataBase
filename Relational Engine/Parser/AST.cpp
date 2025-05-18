@@ -1,0 +1,116 @@
+#include "AST.hpp"
+
+AST::AST(std::unique_ptr<ASTNode> root)
+    : root(std::move(root)) {
+}
+
+const ASTNode* AST::getRoot() const {
+    return root.get();
+}
+ASTNode* AST::getRoot() {
+    return root.get();
+}
+
+void AST::setRoot(std::unique_ptr<ASTNode> newRoot) {
+    root = std::move(newRoot);
+}
+
+std::string AST::toString() const {
+    return root ? root->toString() : "<empty AST>";
+}
+
+void AST::accept(ASTVisitor& visitor) {
+    if (root) {
+        root->accept(visitor);
+    }
+}
+
+void AST::traverse(const std::function<void(ASTNode&)>& fn) {
+    traverseNode(root.get(), fn);
+}
+
+void AST::traverseNode(ASTNode* node, const std::function<void(ASTNode&)>& fn) {
+    if (!node) return;
+    fn(*node);
+    // Recursively traverse children by dynamic_cast and downcasting for known node types.
+    // Optionally expand this for more node types as your AST grows.
+    if (auto select = dynamic_cast<SelectStatementNode*>(node)) {
+        for (auto& item : select->selectItems)
+            traverseNode(item.get(), fn);
+        for (auto& table : select->from)
+            traverseNode(table.get(), fn);
+        for (auto& join : select->joins)
+            traverseNode(join.get(), fn);
+        if (select->where)
+            traverseNode(select->where.get(), fn);
+        if (select->groupBy)
+            traverseNode(select->groupBy.get(), fn);
+        if (select->having)
+            traverseNode(select->having.get(), fn);
+        if (select->orderBy)
+            traverseNode(select->orderBy.get(), fn);
+        if (select->limit)
+            traverseNode(select->limit.get(), fn);
+    }
+    // Repeat for other composite node types (e.g., SetOperationNode, QueryRootNode, etc.)
+    if (auto setop = dynamic_cast<SetOperationNode*>(node)) {
+        traverseNode(setop->left.get(), fn);
+        traverseNode(setop->right.get(), fn);
+    }
+    if (auto queryRoot = dynamic_cast<QueryRootNode*>(node)) {
+        traverseNode(queryRoot->child.get(), fn);
+    }
+    if (auto selectItem = dynamic_cast<SelectItemNode*>(node)) {
+        traverseNode(selectItem->expr.get(), fn);
+    }
+    if (auto tableRef = dynamic_cast<TableReferenceNode*>(node)) {
+        if (tableRef->subquery)
+            traverseNode(tableRef->subquery.get(), fn);
+    }
+    if (auto join = dynamic_cast<JoinNode*>(node)) {
+        traverseNode(join->left.get(), fn);
+        traverseNode(join->right.get(), fn);
+        traverseNode(join->onExpr.get(), fn);
+    }
+    if (auto where = dynamic_cast<WhereNode*>(node)) {
+        traverseNode(where->condition.get(), fn);
+    }
+    if (auto group = dynamic_cast<GroupByNode*>(node)) {
+        for (auto& e : group->groupExprs)
+            traverseNode(e.get(), fn);
+    }
+    if (auto having = dynamic_cast<HavingNode*>(node)) {
+        traverseNode(having->condition.get(), fn);
+    }
+    if (auto order = dynamic_cast<OrderByNode*>(node)) {
+        for (auto& item : order->orderItems)
+            traverseNode(item.expr.get(), fn);
+    }
+    if (auto limit = dynamic_cast<LimitNode*>(node)) {
+        // No children
+    }
+    // Expressions (expand as you add node types)
+    if (auto op = dynamic_cast<OperatorNode*>(node)) {
+        traverseNode(op->left.get(), fn);
+        traverseNode(op->right.get(), fn);
+    }
+    if (auto func = dynamic_cast<FunctionCallNode*>(node)) {
+        for (auto& arg : func->args)
+            traverseNode(arg.get(), fn);
+    }
+    if (auto paren = dynamic_cast<ParenthesizedExprNode*>(node)) {
+        traverseNode(paren->expr.get(), fn);
+    }
+    if (auto caseExpr = dynamic_cast<CaseExpressionNode*>(node)) {
+        for (const auto& c : caseExpr->cases) {
+            traverseNode(c.when.get(), fn);
+            traverseNode(c.then.get(), fn);
+        }
+        if (caseExpr->elseExpr)
+            traverseNode(caseExpr->elseExpr.get(), fn);
+    }
+    if (auto subq = dynamic_cast<SubqueryExprNode*>(node)) {
+        traverseNode(subq->subquery.get(), fn);
+    }
+    // Leaf nodes: IdentifierNode, LiteralNode, StarNode, etc. -- nothing to do.
+}

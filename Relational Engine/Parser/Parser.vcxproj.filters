@@ -24,12 +24,21 @@
     <ClInclude Include="ASTNodes.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ASTVisitor.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ParserTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Parser.cpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ASTNodes.cpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AST.cpp">
       <Filter>Header Files</Filter>
     </ClCompile>
   </ItemGroup>
