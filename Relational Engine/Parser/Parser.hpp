@@ -13,6 +13,7 @@ class Parser {
 private:
     std::vector<Token> tokens;
     size_t pos = 0;
+    std::unique_ptr<AST> ast; // Now the parser owns the AST
 
     // Navigation helpers
     const Token& currentToken() const;
@@ -78,6 +79,10 @@ private:
 public:
     explicit Parser(const std::vector<Token>& tokens);
 
-    // Entry point for parsing (returns QueryRootNode or statement)
-    std::unique_ptr<ASTNode> parse();
+    // Parses and builds the AST tree
+    void parse();
+
+    // Access the built AST
+    const AST* getAST() const;
+    AST* getAST();
 };

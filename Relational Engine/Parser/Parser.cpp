@@ -4,7 +4,7 @@
 
 // --- Constructor ---
 Parser::Parser(const std::vector<Token>& tokens)
-    : tokens(tokens), pos(0) {
+    : tokens(tokens), pos(0), ast(nullptr) {
 }
 
 // --- Navigation helpers ---
@@ -83,8 +83,17 @@ bool Parser::matchKeywordSeq(const std::vector<std::string>& keywords) {
 }
 
 // --- Top-level parsing ---
-std::unique_ptr<ASTNode> Parser::parse() {
-    return parseQuery();
+void Parser::parse() {
+    std::unique_ptr<ASTNode> root = parseQuery();
+    ast = std::make_unique<AST>(std::move(root));
+}
+
+const AST* Parser::getAST() const {
+    return ast.get();
+}
+
+AST* Parser::getAST() {
+    return ast.get();
 }
 
 std::unique_ptr<ASTNode> Parser::parseQuery() {

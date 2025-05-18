@@ -5,6 +5,9 @@
 #include <string>
 #include <functional>
 
+// Forward declare ASTVisitor to avoid circular include
+class ASTVisitor;
+
 /**
  * The AST class holds the root of the SQL AST and provides utility functions.
  */
