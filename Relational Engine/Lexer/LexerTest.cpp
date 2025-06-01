@@ -61,7 +61,7 @@ int main() {
         else if (token.getType() == TokenType::IDENTIFIER) {
             auto id = dynamic_cast<const IdentifierToken*>(&token);
             if (id) {
-                std::cout << " (IdentifierType: " << LexerUtils::identifierTypeToString(id->idType) << ")";
+                std::cout << " (IdentifierType: " << LexerUtils::identifierTypeToString(id->infoPtr->category) << ")";
             }
         }
         // KEYWORD

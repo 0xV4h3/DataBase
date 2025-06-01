@@ -1,111 +1,36 @@
 #pragma once
 
 #include <string>
+#include <memory>
 #include <utility>
-
-/**
- * @brief Types of tokens produced by the lexer.
- */
-enum class TokenType {
-    KEYWORD,
-    FUNCTION,
-    IDENTIFIER,
-    LITERAL,
-    OPERATOR,
-    PUNCTUATOR,
-    DATETIMEPART,
-    COMMENT,
-    END_OF_FILE,
-    UNKNOWN
-};
-
-// ---------------- Keyword categories and their enums ----------------
-
-enum class DMLKeyword { SELECT, INSERT, UPDATE, DELETE, MERGE, EXECUTE, UNKNOWN };
-enum class DDLKeyword { CREATE, ALTER, DROP, TRUNCATE, UNKNOWN };
-enum class ClauseKeyword { FROM, WHERE, JOIN, ON, GROUP, BY, HAVING, ORDER, UNION, DISTINCT, TOP, LIMIT, OFFSET, LEFT, RIGHT, FULL, OUTER, INNER, CROSS, APPLY, UNKNOWN };
-enum class CTEKeyword { WITH, UNKNOWN };
-enum class SetOpKeyword { EXCEPT, INTERSECT, UNKNOWN };
-enum class WordOperatorKeyword { IN, IS, NOT, LIKE, BETWEEN, EXISTS, ALL, ANY, UNKNOWN };
-enum class LogicalConstantKeyword { NULL_KEYWORD, TRUE_KEYWORD, FALSE_KEYWORD, UNKNOWN };
-enum class TransactionKeyword { BEGIN, COMMIT, ROLLBACK, SAVEPOINT, UNKNOWN };
-enum class SecurityKeyword { GRANT, REVOKE, DENY, UNKNOWN };
-enum class ProgStmtKeyword { DECLARE, SET, PRINT, RETURN, THROW, TRY, CATCH, UNKNOWN };
-enum class MiscKeyword { AS, CASE, WHEN, THEN, ELSE, END, CAST, CONVERT, ASC, DESC, UNKNOWN };
-
-// ---------------- Function categories and their enums ----------------
-
-enum class AggregateFunction { COUNT, SUM, AVG, MIN, MAX, UNKNOWN };
-enum class ScalarFunction { CONVERT, CAST, COALESCE, LENGTH, UNKNOWN };
-enum class StringFunction { UPPER, LOWER, SUBSTRING, TRIM, UNKNOWN };
-enum class DateTimeFunction { DATEPART, GETDATE, NOW, UNKNOWN };
-enum class MathFunction { ABS, CEILING, FLOOR, ROUND, UNKNOWN };
-enum class SystemFunction { SUSER_SNAME, CURRENT_USER, TRANCOUNT, UNKNOWN };
-
-// ---------------- Category enums for token types ----------------
-
-enum class KeywordCategory {
-    DML, DDL, CLAUSE, CTE, SETOP, WORD_OP, LOGICAL_CONST,
-    TRANSACTION, SECURITY, PROG_STMT, MISC, UNKNOWN
-};
-enum class FunctionCategory {
-    AGGREGATE, SCALAR, STRING, DATETIME, MATHEMATICAL, SYSTEM, UNKNOWN
-};
-enum class OperatorCategory {
-    ARITHMETIC, ASSIGN, COMPARISON, LOGICAL, BITWISE, CONCAT, UNKNOWN
-};
-enum class PunctuatorCategory {
-    COMMON, TSQL, STRING_DELIM, UNKNOWN
-};
-
-// ---------------- Identifier category enums ----------------
-
-enum class IdentifierCategory {
-    TABLE, VIEW, PROCEDURE, FUNCTION, TRIGGER, INDEX, CONSTRAINT,
-    SCHEMA, DATABASE, SEQUENCE, USER_DEFINED_TYPE, ROLE, USER, EXTERNAL_TABLE,
-    USER_VARIABLE, SYSTEM_VARIABLE, TEMP_TABLE, GLOBAL_TEMP_TABLE,
-    UNKNOWN
-};
-
-// ---------------- Literal category enums ----------------
-
-enum class LiteralCategory {
-    STRING, CHAR, INTEGER, FLOAT, BINARY, HEX,
-    DATE, TIME, DATETIME, JSON, BOOLEAN, NULL_VALUE, UNKNOWN
-};
-
-// ---------------- Operator enums ----------------
-
-enum class ArithmeticOp { PLUS, MINUS, MULTIPLY, DIVIDE, MOD, UNKNOWN };
-enum class AssignOp { ASSIGN, UNKNOWN };
-enum class ComparisonOp { LESS, GREATER, LESS_EQUAL, GREATER_EQUAL, NOT_EQUAL, EQUAL, UNKNOWN };
-enum class LogicalOp { AND, OR, NOT, UNKNOWN };
-enum class BitwiseOp { BITWISE_AND, BITWISE_OR, BITWISE_XOR, BITWISE_NOT, LEFT_SHIFT, RIGHT_SHIFT, UNKNOWN };
-enum class ConcatOp { CONCAT, UNKNOWN };
-
-// ---------------- Date/Time part identifiers (for DATEPART) ----------------
-
-enum class DateTimePart {
-    YEAR, QUARTER, MONTH, DAY_OF_YEAR, DAY, WEEK, ISO_WEEK, WEEKDAY,
-    HOUR, MINUTE, SECOND, MILLISECOND, MICROSECOND, NANOSECOND, TIMEZONE_OFFSET, UNKNOWN
-};
-
-// ---------------- Punctuator and delimiter enums ----------------
-
-enum class CommonSymbol { COMMA, SEMICOLON, LPAREN, RPAREN, LBRACE, RBRACE, LBRACKET, RBRACKET, UNKNOWN };
-enum class TSQLSymbol { DOT, COLON, DOUBLE_COLON, UNKNOWN };
-enum class StringDelimiter { SINGLE_QUOTE, DOUBLE_QUOTE, BACKTICK, UNKNOWN };
-
-// ---------------- Comment category enum ----------------
-
-enum class CommentType { SINGLE_LINE, MULTI_LINE };
+#include "TokenEnums.hpp"
+#include "KeywordInfo.hpp"
+#include "FunctionInfo.hpp"
+#include "IdentifierInfo.hpp"
+#include "LiteralValue.hpp"
+#include "OperatorInfo.hpp"
+#include "PunctuatorInfo.hpp"
 
 // ---------------- Base Token class and derived token classes ----------------
 
 typedef TokenType TT;
 
 /**
- * @brief Base class for all tokens.
+ * @class Token
+ * @brief Base class for all tokens in the SQL parser.
+ * @details
+ * Represents a single token extracted during SQL parsing.
+ * Stores token type, value (lexeme), and position in the source string.
+ *
+ * @see KeywordToken
+ * @see FunctionToken
+ * @see IdentifierToken
+ * @see LiteralToken
+ * @see OperatorToken
+ * @see PunctuatorToken
+ * @see DateTimePartToken
+ * @see DollarQuoteToken
+ * @see CommentToken
  */
 class Token {
 public:
@@ -114,236 +39,262 @@ public:
     Token(TT t, std::string v) : type_(t), value_(std::move(v)), position_(-1) {}
     virtual ~Token() = default;
 
+    /**
+     * @brief Returns the token type.
+     */
     TT getType() const { return type_; }
+
+    /**
+     * @brief Returns the string value (lexeme) of the token.
+     */
     const std::string& getValue() const { return value_; }
+
+    /**
+     * @brief Returns the position of the token in the source (or -1 if unknown).
+     */
     int getPosition() const { return position_; }
 
+    /**
+     * @brief Sets the position of the token in the source.
+     * @param position The position (use -1 for unknown).
+     */
     void setPosition(int position) { position_ = (position >= 0 ? position : -1); }
 
 protected:
-    TT type_;
-    std::string value_;
-    int position_;
+    TT type_;             ///< Token type (enum value)
+    std::string value_;   ///< String value (lexeme) of the token
+    int position_;        ///< Position in the source string
 };
 
 /**
- * @brief Specialized token for SQL keywords.
+ * @class KeywordToken
+ * @brief Token representing a SQL keyword.
+ * @details
+ * Stores a reference to KeywordInfo, which contains metadata about the keyword (such as lexeme, category, etc).
+ * @see Token
+ * @see KeywordInfo
  */
 class KeywordToken : public Token {
 public:
-    KeywordCategory category;
-    union {
-        DMLKeyword dml;
-        DDLKeyword ddl;
-        ClauseKeyword clause;
-        CTEKeyword cte;
-        SetOpKeyword setop;
-        WordOperatorKeyword wordop;
-        LogicalConstantKeyword lconst;
-        TransactionKeyword tran;
-        SecurityKeyword sec;
-        ProgStmtKeyword prog;
-        MiscKeyword misc;
-    } kind;
+    std::shared_ptr<KeywordInfo> infoPtr; ///< Pointer to keyword metadata
 
-    KeywordToken(DMLKeyword k, std::string v)
-        : Token(TT::KEYWORD, std::move(v)), category(KeywordCategory::DML) {
-        kind.dml = k;
+    /**
+     * @brief Constructs a KeywordToken with the given KeywordInfo.
+     * @param info Shared pointer to KeywordInfo.
+     */
+    KeywordToken(std::shared_ptr<KeywordInfo> info)
+        : Token(TT::KEYWORD, info ? info->lexeme : ""), infoPtr(std::move(info)) {
     }
-    KeywordToken(DDLKeyword k, std::string v)
-        : Token(TT::KEYWORD, std::move(v)), category(KeywordCategory::DDL) {
-        kind.ddl = k;
-    }
-    KeywordToken(ClauseKeyword k, std::string v)
-        : Token(TT::KEYWORD, std::move(v)), category(KeywordCategory::CLAUSE) {
-        kind.clause = k;
-    }
-    KeywordToken(CTEKeyword k, std::string v)
-        : Token(TT::KEYWORD, std::move(v)), category(KeywordCategory::CTE) {
-        kind.cte = k;
-    }
-    KeywordToken(SetOpKeyword k, std::string v)
-        : Token(TT::KEYWORD, std::move(v)), category(KeywordCategory::SETOP) {
-        kind.setop = k;
-    }
-    KeywordToken(WordOperatorKeyword k, std::string v)
-        : Token(TT::KEYWORD, std::move(v)), category(KeywordCategory::WORD_OP) {
-        kind.wordop = k;
-    }
-    KeywordToken(LogicalConstantKeyword k, std::string v)
-        : Token(TT::KEYWORD, std::move(v)), category(KeywordCategory::LOGICAL_CONST) {
-        kind.lconst = k;
-    }
-    KeywordToken(TransactionKeyword k, std::string v)
-        : Token(TT::KEYWORD, std::move(v)), category(KeywordCategory::TRANSACTION) {
-        kind.tran = k;
-    }
-    KeywordToken(SecurityKeyword k, std::string v)
-        : Token(TT::KEYWORD, std::move(v)), category(KeywordCategory::SECURITY) {
-        kind.sec = k;
-    }
-    KeywordToken(ProgStmtKeyword k, std::string v)
-        : Token(TT::KEYWORD, std::move(v)), category(KeywordCategory::PROG_STMT) {
-        kind.prog = k;
-    }
-    KeywordToken(MiscKeyword k, std::string v)
-        : Token(TT::KEYWORD, std::move(v)), category(KeywordCategory::MISC) {
-        kind.misc = k;
-    }
-    KeywordToken() : Token(TT::KEYWORD, "", -1), category(KeywordCategory::UNKNOWN) { kind.misc = MiscKeyword::UNKNOWN; }
+
+    /**
+     * @brief Constructs an empty KeywordToken (invalid/unknown).
+     */
+    KeywordToken() : Token(TT::KEYWORD, "", -1), infoPtr(nullptr) {}
 };
 
 /**
- * @brief Specialized token for SQL functions.
+ * @class FunctionToken
+ * @brief Token representing a SQL function.
+ * @details
+ * Stores a reference to FunctionInfo, which describes the function and its metadata.
+ * @see Token
+ * @see FunctionInfo
  */
 class FunctionToken : public Token {
 public:
-    FunctionCategory category;
-    union {
-        AggregateFunction agg;
-        ScalarFunction scal;
-        StringFunction str;
-        DateTimeFunction dt;
-        MathFunction math;
-        SystemFunction sys;
-    } func;
+    std::shared_ptr<FunctionInfo> infoPtr; ///< Pointer to function metadata
 
-    FunctionToken(AggregateFunction f, std::string v)
-        : Token(TT::FUNCTION, std::move(v)), category(FunctionCategory::AGGREGATE) {
-        func.agg = f;
+    /**
+     * @brief Constructs a FunctionToken with the given FunctionInfo.
+     * @param info Shared pointer to FunctionInfo.
+     */
+    FunctionToken(std::shared_ptr<FunctionInfo> info)
+        : Token(TT::FUNCTION, info ? info->name : ""), infoPtr(std::move(info)) {
     }
-    FunctionToken(ScalarFunction f, std::string v)
-        : Token(TT::FUNCTION, std::move(v)), category(FunctionCategory::SCALAR) {
-        func.scal = f;
-    }
-    FunctionToken(StringFunction f, std::string v)
-        : Token(TT::FUNCTION, std::move(v)), category(FunctionCategory::STRING) {
-        func.str = f;
-    }
-    FunctionToken(DateTimeFunction f, std::string v)
-        : Token(TT::FUNCTION, std::move(v)), category(FunctionCategory::DATETIME) {
-        func.dt = f;
-    }
-    FunctionToken(MathFunction f, std::string v)
-        : Token(TT::FUNCTION, std::move(v)), category(FunctionCategory::MATHEMATICAL) {
-        func.math = f;
-    }
-    FunctionToken(SystemFunction f, std::string v)
-        : Token(TT::FUNCTION, std::move(v)), category(FunctionCategory::SYSTEM) {
-        func.sys = f;
-    }
-    FunctionToken() : Token(TT::FUNCTION, "", -1), category(FunctionCategory::UNKNOWN) { func.agg = AggregateFunction::UNKNOWN; }
+
+    /**
+     * @brief Constructs an empty FunctionToken (invalid/unknown).
+     */
+    FunctionToken() : Token(TT::FUNCTION, "", -1), infoPtr(nullptr) {}
 };
 
 /**
- * @brief Token for SQL identifiers.
+ * @class IdentifierToken
+ * @brief Token representing a SQL identifier (table, column, alias, etc).
+ * @details
+ * Stores the identifier string and a pointer to IdentifierInfo with semantic information.
+ * @see Token
+ * @see IdentifierInfo
  */
 class IdentifierToken : public Token {
 public:
-    IdentifierCategory idType;
-    IdentifierToken(IdentifierCategory it, std::string v)
-        : Token(TT::IDENTIFIER, std::move(v)), idType(it) {
+    std::shared_ptr<IdentifierInfo> infoPtr; ///< Pointer to identifier metadata
+
+    /**
+     * @brief Constructs an IdentifierToken with the given string and IdentifierInfo.
+     * @param v The identifier string.
+     * @param info Shared pointer to IdentifierInfo.
+     */
+    IdentifierToken(std::string v, std::shared_ptr<IdentifierInfo> info)
+        : Token(TT::IDENTIFIER, std::move(v)), infoPtr(std::move(info)) {
     }
+
+    /**
+     * @brief Constructs an empty IdentifierToken (invalid/unknown).
+     */
+    IdentifierToken() : Token(TT::IDENTIFIER, "", -1), infoPtr(nullptr) {}
 };
 
 /**
- * @brief Token for SQL literals.
+ * @class LiteralToken
+ * @brief Token representing a SQL literal value.
+ * @details
+ * Stores the literal's category and a pointer to its value object.
+ * @see Token
+ * @see LiteralValue
  */
 class LiteralToken : public Token {
 public:
-    LiteralCategory litType;
+    LiteralCategory litType;                      ///< Category of the literal
+    std::shared_ptr<LiteralValue> valuePtr;       ///< Pointer to the literal value object
+
+    /**
+     * @brief Constructs a LiteralToken with the given category and string value.
+     * @param lt The literal category.
+     * @param v The string value.
+     */
     LiteralToken(LiteralCategory lt, std::string v)
-        : Token(TT::LITERAL, std::move(v)), litType(lt) {
+        : Token(TT::LITERAL, std::move(v)), litType(lt), valuePtr(nullptr) {
     }
+
+    /**
+     * @brief Constructs a LiteralToken with category, string value, and value object.
+     * @param lt The literal category.
+     * @param v The string value.
+     * @param val Shared pointer to the value object.
+     */
+    LiteralToken(LiteralCategory lt, std::string v, std::shared_ptr<LiteralValue> val)
+        : Token(TT::LITERAL, std::move(v)), litType(lt), valuePtr(std::move(val)) {
+    }
+
+    /**
+     * @brief Constructs an empty LiteralToken (invalid/unknown).
+     */
+    LiteralToken() : Token(TT::LITERAL, "", -1), litType(LiteralCategory::UNKNOWN), valuePtr(nullptr) {}
 };
 
 /**
- * @brief Token for SQL operators.
+ * @class OperatorToken
+ * @brief Token representing a SQL operator.
+ * @details
+ * Stores a reference to OperatorInfo with operator metadata.
+ * @see Token
+ * @see OperatorInfo
  */
 class OperatorToken : public Token {
 public:
-    OperatorCategory category;
-    union {
-        ArithmeticOp ar;
-        AssignOp as;
-        ComparisonOp comp;
-        LogicalOp log;
-        BitwiseOp bit;
-        ConcatOp concat;
-    } op;
+    std::shared_ptr<OperatorInfo> infoPtr; ///< Pointer to operator metadata
 
-    OperatorToken(ArithmeticOp o, std::string v)
-        : Token(TT::OPERATOR, std::move(v)), category(OperatorCategory::ARITHMETIC) {
-        op.ar = o;
+    /**
+     * @brief Constructs an OperatorToken with the given OperatorInfo.
+     * @param info Shared pointer to OperatorInfo.
+     */
+    OperatorToken(std::shared_ptr<OperatorInfo> info)
+        : Token(TT::OPERATOR, info ? info->symbol : ""), infoPtr(std::move(info)) {
     }
-    OperatorToken(AssignOp o, std::string v)
-        : Token(TT::OPERATOR, std::move(v)), category(OperatorCategory::ASSIGN) {
-        op.as = o;
-    }
-    OperatorToken(ComparisonOp o, std::string v)
-        : Token(TT::OPERATOR, std::move(v)), category(OperatorCategory::COMPARISON) {
-        op.comp = o;
-    }
-    OperatorToken(LogicalOp o, std::string v)
-        : Token(TT::OPERATOR, std::move(v)), category(OperatorCategory::LOGICAL) {
-        op.log = o;
-    }
-    OperatorToken(BitwiseOp o, std::string v)
-        : Token(TT::OPERATOR, std::move(v)), category(OperatorCategory::BITWISE) {
-        op.bit = o;
-    }
-    OperatorToken(ConcatOp o, std::string v)
-        : Token(TT::OPERATOR, std::move(v)), category(OperatorCategory::CONCAT) {
-        op.concat = o;
-    }
-    OperatorToken() : Token(TT::OPERATOR, "", -1), category(OperatorCategory::UNKNOWN) { op.ar = ArithmeticOp::UNKNOWN; }
+
+    /**
+     * @brief Constructs an empty OperatorToken (invalid/unknown).
+     */
+    OperatorToken() : Token(TT::OPERATOR, "", -1), infoPtr(nullptr) {}
 };
 
 /**
- * @brief Token for SQL date/time part (e.g. YEAR, MONTH).
+ * @class DateTimePartToken
+ * @brief Token representing a SQL date/time part (e.g. YEAR, MONTH).
+ * @details
+ * Used for tokens that refer to specific parts of date/time values.
+ * @see Token
+ * @see DateTimePart
  */
 class DateTimePartToken : public Token {
 public:
-    DateTimePart part;
+    DateTimePart part; ///< The datetime part represented by this token
+
+    /**
+     * @brief Constructs a DateTimePartToken.
+     * @param p The date/time part (enum).
+     * @param v The string representation.
+     */
     DateTimePartToken(DateTimePart p, std::string v)
         : Token(TT::DATETIMEPART, std::move(v)), part(p) {
     }
+
+    /**
+     * @brief Returns the DateTimePart enum value.
+     */
     DateTimePart getPart() const { return part; }
 };
 
 /**
- * @brief Token for SQL punctuators (symbols, delimiters).
+ * @class PunctuatorToken
+ * @brief Token representing a SQL punctuator (symbol, delimiter).
+ * @details
+ * Stores a reference to PunctuatorInfo for metadata.
+ * @see Token
+ * @see PunctuatorInfo
  */
 class PunctuatorToken : public Token {
 public:
-    PunctuatorCategory category;
-    union {
-        CommonSymbol cs;
-        TSQLSymbol ts;
-        StringDelimiter sd;
-    } sym;
+    std::shared_ptr<PunctuatorInfo> infoPtr; ///< Pointer to punctuator metadata
 
-    PunctuatorToken(CommonSymbol s, std::string v)
-        : Token(TT::PUNCTUATOR, std::move(v)), category(PunctuatorCategory::COMMON) {
-        sym.cs = s;
+    /**
+     * @brief Constructs a PunctuatorToken with the given PunctuatorInfo.
+     * @param info Shared pointer to PunctuatorInfo.
+     */
+    PunctuatorToken(std::shared_ptr<PunctuatorInfo> info)
+        : Token(TT::PUNCTUATOR, info ? info->lexeme : ""), infoPtr(std::move(info)) {
     }
-    PunctuatorToken(TSQLSymbol s, std::string v)
-        : Token(TT::PUNCTUATOR, std::move(v)), category(PunctuatorCategory::TSQL) {
-        sym.ts = s;
-    }
-    PunctuatorToken(StringDelimiter s, std::string v)
-        : Token(TT::PUNCTUATOR, std::move(v)), category(PunctuatorCategory::STRING_DELIM) {
-        sym.sd = s;
-    }
-    PunctuatorToken() : Token(TT::PUNCTUATOR, "", -1), category(PunctuatorCategory::UNKNOWN) { sym.cs = CommonSymbol::UNKNOWN; }
+
+    /**
+     * @brief Constructs an empty PunctuatorToken (invalid/unknown).
+     */
+    PunctuatorToken() : Token(TT::PUNCTUATOR, "", -1), infoPtr(nullptr) {}
 };
 
 /**
- * @brief Token for SQL comments.
+ * @class DollarQuoteToken
+ * @brief Token representing a dollar-quoted string.
+ * @details
+ * Used for PostgreSQL-style dollar-quoted string literals.
+ * @see Token
+ */
+class DollarQuoteToken : public Token {
+public:
+    /**
+     * @brief Constructs a DollarQuoteToken with the given string value.
+     * @param v The quoted string value.
+     */
+    DollarQuoteToken(std::string v) : Token(TT::LITERAL, std::move(v)) {}
+};
+
+/**
+ * @class CommentToken
+ * @brief Token representing a SQL comment.
+ * @details
+ * Stores the comment type (single-line, multi-line, etc).
+ * @see Token
+ * @see CommentType
  */
 class CommentToken : public Token {
 public:
-    CommentType commentType;
+    CommentType commentType; ///< Type of comment (enum)
+
+    /**
+     * @brief Constructs a CommentToken with the given type and value.
+     * @param t The comment type (enum).
+     * @param v The comment string.
+     */
     CommentToken(CommentType t, std::string v)
         : Token(TT::COMMENT, std::move(v)), commentType(t) {
     }

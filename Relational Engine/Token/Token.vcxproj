@@ -105,6 +105,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>D:\Visual Studio\DataBase\Relational Engine\Parser;D:\Visual Studio\DataBase\Relational Engine\Token\external\nlohmann\json;D:\Visual Studio\DataBase\Relational Engine\Token\external\pugixml;D:\Visual Studio\DataBase\Relational Engine\Token\external\stduuid;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -128,9 +129,40 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="external\nlohmann\json\json.hpp" />
+    <ClInclude Include="external\nlohmann\json\json_fwd.hpp" />
+    <ClInclude Include="external\pugixml\pugiconfig.hpp" />
+    <ClInclude Include="external\pugixml\pugixml.hpp" />
+    <ClInclude Include="external\stduuid\uuid.h" />
+    <ClInclude Include="FunctionInfo.hpp" />
+    <ClInclude Include="IdentifierInfo.hpp" />
+    <ClInclude Include="KeywordInfo.hpp" />
     <ClInclude Include="LexerUtils.hpp" />
+    <ClInclude Include="LiteralValue.hpp" />
+    <ClInclude Include="OperatorInfo.hpp" />
+    <ClInclude Include="PunctuatorInfo.hpp" />
     <ClInclude Include="Token.hpp" />
+    <ClInclude Include="TokenEnums.hpp" />
     <ClInclude Include="TokenUtils.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ArrayLiteralValue.cpp" />
+    <ClCompile Include="BinaryLiteralValue.cpp" />
+    <ClCompile Include="BooleanLiteralValue.cpp" />
+    <ClCompile Include="CharLiteralValue.cpp" />
+    <ClCompile Include="DateLiteralValue.cpp" />
+    <ClCompile Include="DateTimeLiteralValue.cpp" />
+    <ClCompile Include="EscapeStringLiteralValue.cpp" />
+    <ClCompile Include="external\pugixml\pugixml.cpp" />
+    <ClCompile Include="FloatLiteralValue.cpp" />
+    <ClCompile Include="IntegerLiteralValue.cpp" />
+    <ClCompile Include="JSONLiteralValue.cpp" />
+    <ClCompile Include="LiteralValue.cpp" />
+    <ClCompile Include="NullLiteralValue.cpp" />
+    <ClCompile Include="StringLiteralValue.cpp" />
+    <ClCompile Include="TimeLiteralValue.cpp" />
+    <ClCompile Include="UUIDLiteralValue.cpp" />
+    <ClCompile Include="XMLLiteralValue.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

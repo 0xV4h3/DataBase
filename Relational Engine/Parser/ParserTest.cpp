@@ -43,8 +43,8 @@ auto print_token_info = [](const Token& token) {
     // IDENTIFIER
     else if (token.getType() == TokenType::IDENTIFIER) {
         auto id = dynamic_cast<const IdentifierToken*>(&token);
-        if (id) {
-            std::cout << " (IdentifierType: " << LexerUtils::identifierTypeToString(id->idType) << ")";
+        if (id && id->infoPtr) {
+            std::cout << " (IdentifierType: " << LexerUtils::identifierTypeToString(id->infoPtr->category) << ")";
         }
     }
     // KEYWORD
