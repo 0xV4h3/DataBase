@@ -13,14 +13,8 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Info Classes">
-      <UniqueIdentifier>{496bd616-8b5a-4e3d-b9a3-f190442a3cbc}</UniqueIdentifier>
-    </Filter>
     <Filter Include="External">
       <UniqueIdentifier>{ca089886-9dcc-45e3-818e-62a8062bd1c2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Utils">
-      <UniqueIdentifier>{3fa72433-949c-4242-950c-46e1e6a5c0b0}</UniqueIdentifier>
     </Filter>
     <Filter Include="Literal SubClasses">
       <UniqueIdentifier>{dc0a881c-67ec-4328-88dc-eaca56dbe5e6}</UniqueIdentifier>
@@ -28,14 +22,14 @@
     <Filter Include="Literal Class">
       <UniqueIdentifier>{7f0150ee-e88e-4576-a354-9ba7bb47c787}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{d1633aac-45c1-4c4a-ba04-01049fbfea77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Info Classes">
+      <UniqueIdentifier>{6da7aff5-4d53-4c8b-8ec2-3472fc9333e6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Token.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TokenEnums.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="external\nlohmann\json\json.hpp">
       <Filter>External</Filter>
     </ClInclude>
@@ -50,6 +44,21 @@
     </ClInclude>
     <ClInclude Include="external\stduuid\uuid.h">
       <Filter>External</Filter>
+    </ClInclude>
+    <ClInclude Include="Token.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TokenEnums.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LiteralValue.hpp">
+      <Filter>Literal Class</Filter>
+    </ClInclude>
+    <ClInclude Include="LexerUtils.hpp">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="TokenUtils.hpp">
+      <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="FunctionInfo.hpp">
       <Filter>Info Classes</Filter>
@@ -66,19 +75,13 @@
     <ClInclude Include="PunctuatorInfo.hpp">
       <Filter>Info Classes</Filter>
     </ClInclude>
-    <ClInclude Include="LexerUtils.hpp">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="TokenUtils.hpp">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="LiteralValue.hpp">
-      <Filter>Literal Class</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="external\pugixml\pugixml.cpp">
       <Filter>External</Filter>
+    </ClCompile>
+    <ClCompile Include="LiteralValue.cpp">
+      <Filter>Literal Class</Filter>
     </ClCompile>
     <ClCompile Include="ArrayLiteralValue.cpp">
       <Filter>Literal SubClasses</Filter>
@@ -119,14 +122,11 @@
     <ClCompile Include="TimeLiteralValue.cpp">
       <Filter>Literal SubClasses</Filter>
     </ClCompile>
-    <ClCompile Include="XMLLiteralValue.cpp">
-      <Filter>Literal SubClasses</Filter>
-    </ClCompile>
     <ClCompile Include="UUIDLiteralValue.cpp">
       <Filter>Literal SubClasses</Filter>
     </ClCompile>
-    <ClCompile Include="LiteralValue.cpp">
-      <Filter>Literal Class</Filter>
+    <ClCompile Include="XMLLiteralValue.cpp">
+      <Filter>Literal SubClasses</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
