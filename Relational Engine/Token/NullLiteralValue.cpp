@@ -2,41 +2,47 @@
  * @file NullLiteralValue.cpp
  * @brief Implementation of NullLiteralValue methods.
  * @details
- * Implements construction, string conversion, deep copy, and comparison for NullLiteralValue.
+ * Implements construction, string conversion, cloning,
+ * and comparison for NullLiteralValue following SQL NULL rules.
  */
 
-#include "LiteralValue.hpp"
-#include <memory>
-#include <string>
+#include "NullLiteralValue.hpp"
 
-// --- Constructor ---
+ // === Constructor ===
+
 NullLiteralValue::NullLiteralValue() {}
 
-// --- Return as string ---
+// === Core Interface ===
+
 std::string NullLiteralValue::toString() const {
     return "NULL";
 }
 
-// --- Deep copy ---
 std::unique_ptr<LiteralValue> NullLiteralValue::clone() const {
     return std::make_unique<NullLiteralValue>();
 }
 
-// --- Compare by value ---
+bool NullLiteralValue::equals(const LiteralValue& other) const {
+    return dynamic_cast<const NullLiteralValue*>(&other) != nullptr;
+}
+
+// === Operations ===
+
+bool NullLiteralValue::preservesNull(ComparisonOp op) {
+    return op == ComparisonOp::EQUAL || op == ComparisonOp::NOT_EQUAL;
+}
+
 bool NullLiteralValue::compare(const LiteralValue& rhs, ComparisonOp op) const {
-    // NULL is only equal to NULL for EQUAL and NOT_EQUAL, otherwise always false.
-    if (const auto* r = dynamic_cast<const NullLiteralValue*>(&rhs)) {
-        switch (op) {
-        case ComparisonOp::EQUAL:
-            return true;
-        case ComparisonOp::NOT_EQUAL:
-            return false;
-        default:
+    // Handle NULL comparison with NULL
+    const auto* r = dynamic_cast<const NullLiteralValue*>(&rhs);
+    if (r) {
+        if (!preservesNull(op)) {
             return false; // NULL does not compare as less/greater/like/etc.
         }
+        return op == ComparisonOp::EQUAL;
     }
-    // Comparing NULL to anything else is always false except for NOT_EQUAL (returns true)
-    if (op == ComparisonOp::NOT_EQUAL)
-        return true;
-    return false;
+
+    // Handle NULL comparison with non-NULL
+    // Only NOT_EQUAL returns true, all others return false
+    return op == ComparisonOp::NOT_EQUAL;
 }

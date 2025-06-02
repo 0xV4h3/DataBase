@@ -2,47 +2,104 @@
  * @file TimeLiteralValue.cpp
  * @brief Implementation of TimeLiteralValue methods.
  * @details
- * Implements construction, string conversion, deep copy, arithmetic operations, and comparison for TimeLiteralValue.
+ * Implements construction, string conversion, cloning,
+ * arithmetic operations, and comparison for TimeLiteralValue.
  */
 
-#include "LiteralValue.hpp"
+#include "TimeLiteralValue.hpp"
+#include "IntegerLiteralValue.hpp"
 #include <chrono>
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
 
-// --- Helper: parse "HH:MM:SS" to std::tm ---
-static std::tm parseTime(const std::string& timeStr) {
+using namespace std::chrono;
+
+// === Constructors ===
+
+TimeLiteralValue::TimeLiteralValue() : value(getCurrentTime()) {
+    validate();
+}
+
+TimeLiteralValue::TimeLiteralValue(const std::string& v) : value(v) {
+    validate();
+}
+
+// === Core Interface ===
+
+std::string TimeLiteralValue::toString() const {
+    return value;
+}
+
+std::unique_ptr<LiteralValue> TimeLiteralValue::clone() const {
+    return std::make_unique<TimeLiteralValue>(value);
+}
+
+// === Protected Methods ===
+
+std::string TimeLiteralValue::getCurrentTime() {
+    auto now = system_clock::now();
+    auto time = system_clock::to_time_t(now);
+    std::tm tm;
+#ifdef _WIN32
+    localtime_s(&tm, &time);
+#else
+    tm = *std::localtime(&time);
+#endif
+    return timeToString(tm);
+}
+
+std::tm TimeLiteralValue::parseTime(const std::string& timeStr) {
     std::tm tm = {};
     std::istringstream ss(timeStr);
     ss >> std::get_time(&tm, "%H:%M:%S");
-    if (ss.fail()) throw std::runtime_error("Invalid time format: " + timeStr);
+    if (ss.fail()) {
+        throw std::runtime_error("Invalid time format: " + timeStr);
+    }
     return tm;
 }
 
-// --- Helper: std::tm to "HH:MM:SS" string ---
-static std::string timeToString(const std::tm& tm) {
+std::string TimeLiteralValue::timeToString(const std::tm& tm) {
     std::ostringstream os;
     os << std::put_time(&tm, "%H:%M:%S");
     return os.str();
 }
 
-// --- Constructor ---
-TimeLiteralValue::TimeLiteralValue(const std::string& v) : value(v) {}
-
-// --- Return as string ---
-std::string TimeLiteralValue::toString() const {
-    return value;
+bool TimeLiteralValue::validateTimeComponents(int hours, int minutes, int seconds) {
+    return hours >= 0 && hours < 24 &&
+        minutes >= 0 && minutes < 60 &&
+        seconds >= 0 && seconds < 60;
 }
 
-// --- Deep copy ---
-std::unique_ptr<LiteralValue> TimeLiteralValue::clone() const {
-    return std::make_unique<TimeLiteralValue>(value);
+// === Validation ===
+
+bool TimeLiteralValue::isValid() const {
+    try {
+        std::tm tm = parseTime(value);
+        return validateTimeComponents(tm.tm_hour, tm.tm_min, tm.tm_sec);
+    }
+    catch (const std::exception&) {
+        return false;
+    }
 }
 
-// --- Arithmetic operations ---
-std::unique_ptr<LiteralValue> TimeLiteralValue::applyArithmetic(const LiteralValue& rhs, ArithmeticOp op) const {
-    // Time + Integer (seconds) or Time - Integer (seconds)
+void TimeLiteralValue::validate() const {
+    if (!isValid()) {
+        throw std::invalid_argument("Invalid time format or values: " + value);
+    }
+}
+
+bool TimeLiteralValue::equals(const LiteralValue& other) const {
+    const auto* timeOther = dynamic_cast<const TimeLiteralValue*>(&other);
+    return timeOther && value == timeOther->value;
+}
+
+// === Operations ===
+
+std::unique_ptr<LiteralValue> TimeLiteralValue::applyArithmetic(
+    const LiteralValue& rhs, ArithmeticOp op) const
+{
+    // Time + Integer or Time - Integer (seconds)
     if (const auto* r = dynamic_cast<const IntegerLiteralValue*>(&rhs)) {
         std::tm tm = parseTime(value);
         std::time_t t = std::mktime(&tm);
@@ -59,6 +116,7 @@ std::unique_ptr<LiteralValue> TimeLiteralValue::applyArithmetic(const LiteralVal
             return std::make_unique<TimeLiteralValue>(timeToString(newtm));
         }
     }
+
     // Time - Time => Integer (difference in seconds)
     if (const auto* r = dynamic_cast<const TimeLiteralValue*>(&rhs)) {
         std::tm tm1 = parseTime(value);
@@ -66,30 +124,23 @@ std::unique_ptr<LiteralValue> TimeLiteralValue::applyArithmetic(const LiteralVal
         std::time_t t1 = std::mktime(&tm1);
         std::time_t t2 = std::mktime(&tm2);
         int64_t seconds = static_cast<int64_t>(std::difftime(t1, t2));
-        if (op == ArithmeticOp::MINUS)
+        if (op == ArithmeticOp::MINUS) {
             return std::make_unique<IntegerLiteralValue>(seconds);
+        }
     }
     return nullptr;
 }
 
-// --- Comparison operators ---
 bool TimeLiteralValue::compare(const LiteralValue& rhs, ComparisonOp op) const {
     if (const auto* r = dynamic_cast<const TimeLiteralValue*>(&rhs)) {
         switch (op) {
-        case ComparisonOp::LESS:
-            return value < r->value;
-        case ComparisonOp::GREATER:
-            return value > r->value;
-        case ComparisonOp::LESS_EQUAL:
-            return value <= r->value;
-        case ComparisonOp::GREATER_EQUAL:
-            return value >= r->value;
-        case ComparisonOp::NOT_EQUAL:
-            return value != r->value;
-        case ComparisonOp::EQUAL:
-            return value == r->value;
-        default:
-            return false;
+        case ComparisonOp::LESS:          return value < r->value;
+        case ComparisonOp::GREATER:       return value > r->value;
+        case ComparisonOp::LESS_EQUAL:    return value <= r->value;
+        case ComparisonOp::GREATER_EQUAL: return value >= r->value;
+        case ComparisonOp::NOT_EQUAL:     return value != r->value;
+        case ComparisonOp::EQUAL:         return value == r->value;
+        default:                          return false;
         }
     }
     return false;

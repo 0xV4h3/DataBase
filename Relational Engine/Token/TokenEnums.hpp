@@ -9,26 +9,49 @@
  * Used throughout the lexer, parser, and semantic analysis modules.
  */
 
- // ---------------- Token types ----------------
+ // ---------------- Operator Precedence Constants ----------------
 
- /**
-  * @enum TokenType
-  * @brief Types of tokens produced by the lexer.
-  */
+namespace SQLOperatorPrecedence {
+    constexpr int HIGHEST = 100;       // Parentheses, brackets
+    constexpr int MEMBER = 90;         // . and -> operators
+    constexpr int UNARY = 80;          // NOT, !, -, +, ~
+    constexpr int MULTIPLICATIVE = 70;  // *, /, %
+    constexpr int ADDITIVE = 60;       // +, -
+    constexpr int SHIFT = 55;          // <<, >>
+    constexpr int BITWISE_AND = 50;    // &
+    constexpr int BITWISE_XOR = 45;    // ^
+    constexpr int BITWISE_OR = 40;     // |
+    constexpr int COMPARISON = 35;     // =, <>, <, >, <=, >=
+    constexpr int NULL_TEST = 30;      // IS NULL, IS NOT NULL
+    constexpr int BETWEEN = 25;        // BETWEEN, NOT BETWEEN
+    constexpr int IN = 20;             // IN, NOT IN
+    constexpr int PATTERN = 15;        // LIKE, SIMILAR TO, REGEX
+    constexpr int AND = 10;            // AND
+    constexpr int OR = 5;              // OR
+    constexpr int ASSIGNMENT = 1;      // =, :=
+    constexpr int LOWEST = 0;          // Comma operator
+}
+
+// ---------------- Core Token Types ----------------
+
+/**
+ * @enum TokenType
+ * @brief Fundamental token types produced by lexical analysis.
+ */
 enum class TokenType {
     UNKNOWN = 0,
-    KEYWORD,
-    FUNCTION,
-    IDENTIFIER,
-    LITERAL,
-    OPERATOR,
-    PUNCTUATOR,
-    DATETIMEPART,
-    COMMENT,
-    END_OF_FILE
+    KEYWORD,        // SQL keywords (SELECT, INSERT, etc)
+    FUNCTION,       // Built-in functions (COUNT, MAX, etc)
+    IDENTIFIER,     // Names (tables, columns, aliases)
+    LITERAL,        // Constants (numbers, strings, etc)
+    OPERATOR,       // Operations (+, -, *, /, etc)
+    PUNCTUATOR,     // Syntax elements (,;(){}[], etc)
+    DATETIMEPART,   // Date/time components (YEAR, MONTH, etc)
+    COMMENT,        // SQL comments
+    END_OF_FILE     // End of input marker
 };
 
-// ---------------- Keyword categories and their enums ----------------
+// ---------------- SQL Statement Keywords ----------------
 
 /**
  * @enum DMLKeyword
@@ -36,7 +59,12 @@ enum class TokenType {
  */
 enum class DMLKeyword {
     UNKNOWN = 0,
-    SELECT, INSERT, UPDATE, DELETE, MERGE, EXECUTE, VALUES, OUTPUT, DEFAULT, INTO, RETURNING, USING
+    // Core DML
+    SELECT, INSERT, UPDATE, DELETE,
+    // Extended DML
+    MERGE, EXECUTE, VALUES,
+    // Clause modifiers
+    OUTPUT, DEFAULT, INTO, RETURNING, USING
 };
 
 /**
@@ -45,8 +73,14 @@ enum class DMLKeyword {
  */
 enum class DDLKeyword {
     UNKNOWN = 0,
-    CREATE, ALTER, DROP, TRUNCATE, TABLE, VIEW, INDEX, SEQUENCE, CONSTRAINT, TRIGGER, PRIMARY, FOREIGN, REFERENCES,
-    UNIQUE, CHECK, PARTITION, COLUMN, DATABASE, SCHEMA, TYPE
+    // Core DDL actions
+    CREATE, ALTER, DROP, TRUNCATE,
+    // Object types
+    TABLE, VIEW, INDEX, SEQUENCE, CONSTRAINT, TRIGGER,
+    // Constraint types
+    PRIMARY, FOREIGN, REFERENCES, UNIQUE, CHECK,
+    // Object attributes
+    PARTITION, COLUMN, DATABASE, SCHEMA, TYPE
 };
 
 /**
@@ -55,8 +89,20 @@ enum class DDLKeyword {
  */
 enum class ClauseKeyword {
     UNKNOWN = 0,
-    FROM, WHERE, JOIN, ON, GROUP, BY, HAVING, ORDER, UNION, DISTINCT, TOP, LIMIT, OFFSET, LEFT, RIGHT, FULL,
-    OUTER, INNER, CROSS, APPLY, WINDOW, PARTITION, OVER, AS, USING, DO, END
+    // Core clauses
+    FROM, WHERE, GROUP, HAVING, ORDER,
+    // Join types
+    JOIN, INNER, LEFT, RIGHT, FULL, CROSS,
+    // Join modifiers
+    OUTER, ON, USING,
+    // Result modifiers
+    DISTINCT, TOP, LIMIT, OFFSET,
+    // Window clauses
+    WINDOW, PARTITION, OVER,
+    // Other modifiers
+    AS, BY, DO, END,
+    // Special
+    UNION, APPLY
 };
 
 /**
@@ -65,34 +111,49 @@ enum class ClauseKeyword {
  */
 enum class CTEKeyword {
     UNKNOWN = 0,
-    WITH, RECURSIVE
+    WITH,
+    RECURSIVE
 };
 
 /**
  * @enum SetOpKeyword
- * @brief Set operation keywords (UNION, INTERSECT, etc).
+ * @brief Set operation keywords.
  */
 enum class SetOpKeyword {
     UNKNOWN = 0,
-    EXCEPT, INTERSECT, UNION
+    UNION,      // Combines and removes duplicates
+    INTERSECT,  // Common rows only
+    EXCEPT      // First set minus second set
 };
 
 /**
- * @enum WordOperatorKeyword
- * @brief Word-like operator keywords.
+ * @enum PredicateKeyword
+ * @brief Predicate and condition keywords.
+ * @details Replaces WordOperatorKeyword for clarity.
  */
-enum class WordOperatorKeyword {
+enum class PredicateKeyword {
     UNKNOWN = 0,
-    IN, IS, NOT, LIKE, BETWEEN, EXISTS, ALL, ANY, SOME, UNIQUE
+    // Comparison predicates
+    IN, IS, LIKE, BETWEEN,
+    // Quantifiers
+    ALL, ANY, SOME,
+    // Existence test
+    EXISTS,
+    // Modifiers
+    NOT,
+    // Constraints
+    UNIQUE
 };
 
 /**
  * @enum LogicalConstantKeyword
- * @brief Logical constant keywords (NULL, TRUE, FALSE).
+ * @brief Logical and special constant keywords.
  */
 enum class LogicalConstantKeyword {
     UNKNOWN = 0,
-    NULL_KEYWORD, TRUE_KEYWORD, FALSE_KEYWORD
+    NULL_KEYWORD,   // NULL value
+    TRUE_KEYWORD,   // Boolean true
+    FALSE_KEYWORD   // Boolean false
 };
 
 /**
@@ -101,25 +162,45 @@ enum class LogicalConstantKeyword {
  */
 enum class TransactionKeyword {
     UNKNOWN = 0,
-    BEGIN, COMMIT, ROLLBACK, SAVEPOINT, RELEASE, CHAIN
+    // Core transaction
+    BEGIN, COMMIT, ROLLBACK,
+    // Savepoint control
+    SAVEPOINT, RELEASE,
+    // Transaction options
+    CHAIN
 };
 
 /**
  * @enum SecurityKeyword
- * @brief Security-related keywords.
+ * @brief Security and permission keywords.
  */
 enum class SecurityKeyword {
     UNKNOWN = 0,
-    GRANT, REVOKE, DENY, ON, TO
+    GRANT,    // Give permissions
+    REVOKE,   // Remove permissions
+    DENY,     // Explicitly deny
+    ON,       // Target specifier
+    TO        // Recipient specifier
 };
 
 /**
  * @enum ProgStmtKeyword
- * @brief Programming statement keywords (procedural, control flow, etc).
+ * @brief Programming and control flow keywords.
  */
 enum class ProgStmtKeyword {
     UNKNOWN = 0,
-    DECLARE, SET, PRINT, RETURN, THROW, TRY, CATCH, IF, ELSE, LOOP, WHILE, FOR, BREAK, CONTINUE, EXEC, GO
+    // Variable handling
+    DECLARE, SET,
+    // Output
+    PRINT, RETURN,
+    // Error handling
+    THROW, TRY, CATCH,
+    // Control flow
+    IF, ELSE, LOOP, WHILE, FOR,
+    // Flow control
+    BREAK, CONTINUE,
+    // Execution control
+    EXEC, GO
 };
 
 /**
@@ -128,11 +209,40 @@ enum class ProgStmtKeyword {
  */
 enum class MiscKeyword {
     UNKNOWN = 0,
-    AS, CASE, WHEN, THEN, ELSE, END, CAST, CONVERT, ASC, DESC, GENERATED, AUTOINCREMENT, CASCADE, RESTRICT, DEFERRABLE,
-    EXPLAIN, ANALYZE, VACUUM
+    // Flow control
+    CASE, WHEN, THEN, ELSE, END,
+    // Type conversion
+    CAST, CONVERT,
+    // Sort direction
+    ASC, DESC,
+    // Column attributes
+    GENERATED, AUTOINCREMENT,
+    // Referential actions
+    CASCADE, RESTRICT,
+    // Constraint timing
+    DEFERRABLE,
+    // Query analysis
+    EXPLAIN, ANALYZE,
+    // Maintenance
+    VACUUM
 };
 
-// ---------------- Function categories and their enums ----------------
+// ---------------- Function Categories ----------------
+
+/**
+ * @enum FunctionCategory
+ * @brief High-level categorization of SQL functions.
+ */
+enum class FunctionCategory {
+    UNKNOWN = 0,
+    AGGREGATE,    // Group operations
+    SCALAR,       // Single-row functions
+    STRING,       // Text manipulation
+    DATETIME,     // Date/time handling
+    MATHEMATICAL, // Numeric operations
+    SYSTEM,       // Database/system info
+    WINDOW        // Window/analytic functions
+};
 
 /**
  * @enum AggregateFunction
@@ -140,7 +250,14 @@ enum class MiscKeyword {
  */
 enum class AggregateFunction {
     UNKNOWN = 0,
-    COUNT, SUM, AVG, MIN, MAX, GROUP_CONCAT, ARRAY_AGG, LISTAGG, STDDEV, VARIANCE
+    // Basic aggregates
+    COUNT, SUM, AVG, MIN, MAX,
+    // String aggregates
+    GROUP_CONCAT, LISTAGG,
+    // Array operations
+    ARRAY_AGG,
+    // Statistical
+    STDDEV, VARIANCE
 };
 
 /**
@@ -149,194 +266,328 @@ enum class AggregateFunction {
  */
 enum class ScalarFunction {
     UNKNOWN = 0,
-    CONVERT, CAST, COALESCE, NULLIF, IFNULL, LEAST, GREATEST, FORMAT, LENGTH, POSITION, ABS, ROUND, FLOOR, CEILING,
+    // Type conversion
+    CONVERT, CAST,
+    // Null handling
+    COALESCE, NULLIF, IFNULL,
+    // Comparison
+    LEAST, GREATEST,
+    // Formatting
+    FORMAT,
+    // String operations
+    LENGTH, POSITION,
+    // Numeric
+    ABS, ROUND, FLOOR, CEILING,
+    // Date manipulation
     DATE_TRUNC, DATE_ADD, DATE_SUB, EXTRACT
 };
 
 /**
  * @enum StringFunction
- * @brief String manipulation SQL functions.
+ * @brief String manipulation functions.
  */
 enum class StringFunction {
     UNKNOWN = 0,
-    UPPER, LOWER, SUBSTRING, TRIM, LTRIM, RTRIM, CONCAT, REPLACE, SPLIT_PART, LEFT, RIGHT, REPEAT, REVERSE,
-    CHAR_LENGTH, CHARACTER_LENGTH, POSITION
+    // Case conversion
+    UPPER, LOWER,
+    // Extraction
+    SUBSTRING,
+    // Trimming
+    TRIM, LTRIM, RTRIM,
+    // Combination
+    CONCAT, REPLACE,
+    // Parts
+    SPLIT_PART,
+    // Position
+    LEFT, RIGHT,
+    // Modification
+    REPEAT, REVERSE,
+    // Length
+    CHAR_LENGTH, CHARACTER_LENGTH,
+    // Search
+    POSITION
 };
 
 /**
  * @enum DateTimeFunction
- * @brief Date/time SQL functions.
+ * @brief Date/time functions.
  */
 enum class DateTimeFunction {
     UNKNOWN = 0,
-    DATEPART, GETDATE, NOW, CURRENT_DATE, CURRENT_TIME, CURRENT_TIMESTAMP, LOCALTIME, LOCALTIMESTAMP, AGE,
+    // Parts
+    DATEPART,
+    // Current timestamp
+    GETDATE, NOW,
+    // Current components
+    CURRENT_DATE, CURRENT_TIME, CURRENT_TIMESTAMP,
+    // Local time
+    LOCALTIME, LOCALTIMESTAMP,
+    // Calculations
+    AGE,
+    // Conversions
     TO_DATE, TO_TIMESTAMP
 };
 
 /**
  * @enum MathFunction
- * @brief Mathematical SQL functions.
+ * @brief Mathematical functions.
  */
 enum class MathFunction {
     UNKNOWN = 0,
-    ABS, CEILING, FLOOR, ROUND, POWER, SQRT, EXP, LN, LOG, MOD, RANDOM, SIGN, TRUNC, PI, SIN, COS, TAN, ASIN, ACOS, ATAN,
+    // Basic
+    ABS, CEILING, FLOOR, ROUND,
+    // Advanced
+    POWER, SQRT, EXP, LN, LOG,
+    // Integer
+    MOD, SIGN, TRUNC,
+    // Random
+    RANDOM,
+    // Constants
+    PI,
+    // Trigonometry
+    SIN, COS, TAN, ASIN, ACOS, ATAN,
+    // Conversion
     DEGREES, RADIANS
 };
 
 /**
  * @enum SystemFunction
- * @brief System SQL functions.
+ * @brief System and metadata functions.
  */
 enum class SystemFunction {
     UNKNOWN = 0,
-    SUSER_SNAME, CURRENT_USER, SESSION_USER, USER, SYSTEM_USER, TRANCOUNT, VERSION, DATABASE, SCHEMA_NAME
+    // User info
+    SUSER_SNAME, CURRENT_USER, SESSION_USER,
+    USER, SYSTEM_USER,
+    // Transaction
+    TRANCOUNT,
+    // System info
+    VERSION, DATABASE, SCHEMA_NAME
 };
 
 /**
  * @enum WindowFunction
- * @brief SQL window functions.
+ * @brief Window/analytic functions.
  */
 enum class WindowFunction {
     UNKNOWN = 0,
-    ROW_NUMBER, RANK, DENSE_RANK, NTILE, LEAD, LAG, FIRST_VALUE, LAST_VALUE, NTH_VALUE, PERCENT_RANK, CUME_DIST
+    // Ranking
+    ROW_NUMBER, RANK, DENSE_RANK,
+    // Distribution
+    NTILE, PERCENT_RANK, CUME_DIST,
+    // Navigation
+    LEAD, LAG,
+    // Value access
+    FIRST_VALUE, LAST_VALUE, NTH_VALUE
 };
 
-// ---------------- Category enums for token types ----------------
+// ---------------- Categories and Types ----------------
 
 /**
  * @enum KeywordCategory
- * @brief Keyword category for tokens.
+ * @brief High-level keyword classification.
  */
 enum class KeywordCategory {
     UNKNOWN = 0,
-    DML, DDL, CLAUSE, CTE, SETOP, WORD_OP, LOGICAL_CONST,
-    TRANSACTION, SECURITY, PROG_STMT, MISC
-};
-
-/**
- * @enum FunctionCategory
- * @brief Function category for tokens.
- */
-enum class FunctionCategory {
-    UNKNOWN = 0,
-    AGGREGATE, SCALAR, STRING, DATETIME, MATHEMATICAL, SYSTEM, WINDOW
+    DML,           // Data manipulation
+    DDL,           // Data definition
+    CLAUSE,        // Query clauses
+    CTE,           // Common table expressions
+    SETOP,         // Set operations
+    PREDICATE,     // Conditions and tests
+    LOGICAL_CONST, // TRUE, FALSE, NULL
+    TRANSACTION,   // Transaction control
+    SECURITY,      // Permissions
+    PROG_STMT,     // Programming
+    MISC          // Other keywords
 };
 
 /**
  * @enum OperatorCategory
- * @brief Operator category for tokens.
+ * @brief Operator classification.
  */
 enum class OperatorCategory {
     UNKNOWN = 0,
-    ARITHMETIC, ASSIGN, COMPARISON, LOGICAL, BITWISE, CONCAT, JSON, REGEX, ARRAY, TYPECAST
+    ARITHMETIC,  // Math operations
+    ASSIGN,      // Assignment
+    COMPARISON,  // Comparisons
+    LOGICAL,     // Boolean operations
+    BITWISE,     // Bit manipulation
+    CONCAT,      // String concatenation
+    JSON,        // JSON operations
+    REGEX,       // Pattern matching
+    ARRAY,       // Array operations
+    TYPECAST     // Type conversion
 };
 
-/**
- * @enum PunctuatorCategory
- * @brief Punctuator/delimiter category.
- */
-enum class PunctuatorCategory {
-    UNKNOWN = 0,
-    COMMON, TSQL, STRING_DELIM, DOLLAR_QUOTE, PARAM_MARKER
-};
-
-// ---------------- Identifier category enums ----------------
-
-/**
- * @enum IdentifierCategory
- * @brief Identifier category for tokens.
- */
-enum class IdentifierCategory {
-    UNKNOWN = 0,
-    TABLE, VIEW, PROCEDURE, FUNCTION, TRIGGER, INDEX, CONSTRAINT,
-    SCHEMA, DATABASE, SEQUENCE, USER_DEFINED_TYPE, ROLE, USER, EXTERNAL_TABLE,
-    USER_VARIABLE, SYSTEM_VARIABLE, TEMP_TABLE, GLOBAL_TEMP_TABLE,
-    COLUMN, PARAMETER, LABEL
-};
-
-// ---------------- Literal category enums ----------------
-
-/**
- * @enum LiteralCategory
- * @brief Literal value category for tokens.
- */
-enum class LiteralCategory {
-    UNKNOWN = 0,
-    STRING, ESCAPE_STRING, CHAR, INTEGER, FLOAT, BINARY, HEX,
-    DATE, TIME, DATETIME, INTERVAL, UUID, ARRAY, JSON, XML, BOOLEAN, NULL_VALUE
-};
-
-// ---------------- Operator enums ----------------
+// ---------------- Operators ----------------
 
 /**
  * @enum ArithmeticOp
- * @brief Arithmetic operator.
+ * @brief Arithmetic operators.
  */
-enum class ArithmeticOp { UNKNOWN = 0, PLUS, MINUS, MULTIPLY, DIVIDE, MOD };
+enum class ArithmeticOp {
+    UNKNOWN = 0,
+    PLUS,     // Addition
+    MINUS,    // Subtraction
+    MULTIPLY, // Multiplication
+    DIVIDE,   // Division
+    MOD       // Modulo
+};
 
 /**
  * @enum AssignOp
- * @brief Assignment operator.
+ * @brief Assignment operators.
  */
-enum class AssignOp { UNKNOWN = 0, ASSIGN, COLON_ASSIGN };
+enum class AssignOp {
+    UNKNOWN = 0,
+    ASSIGN,       // =
+    COLON_ASSIGN  // :=
+};
 
 /**
  * @enum ComparisonOp
- * @brief Comparison operator.
+ * @brief Comparison operators.
  */
 enum class ComparisonOp {
     UNKNOWN = 0,
-    LESS, GREATER, LESS_EQUAL, GREATER_EQUAL, NOT_EQUAL, EQUAL, IS_DISTINCT_FROM, IS_NOT_DISTINCT_FROM,
-    LIKE, NOT_LIKE, ILIKE, NOT_ILIKE, SIMILAR_TO, NOT_SIMILAR_TO
+    // Basic comparisons
+    LESS, GREATER, LESS_EQUAL, GREATER_EQUAL,
+    NOT_EQUAL, EQUAL,
+    // Null-safe equality
+    IS_DISTINCT_FROM, IS_NOT_DISTINCT_FROM,
+    // Pattern matching
+    LIKE, NOT_LIKE,
+    ILIKE, NOT_ILIKE,
+    SIMILAR_TO, NOT_SIMILAR_TO
 };
 
 /**
  * @enum LogicalOp
- * @brief Logical operator.
+ * @brief Logical operators.
  */
-enum class LogicalOp { UNKNOWN = 0, AND, OR, NOT, XOR, IMPLIES };
+enum class LogicalOp {
+    UNKNOWN = 0,
+    AND, OR, NOT,  // Basic logic
+    XOR,           // Exclusive or
+    IMPLIES        // Implication
+};
 
 /**
  * @enum BitwiseOp
- * @brief Bitwise operator.
+ * @brief Bitwise operators.
  */
 enum class BitwiseOp {
     UNKNOWN = 0,
+    // Basic operations
     BITWISE_AND, BITWISE_OR, BITWISE_XOR, BITWISE_NOT,
+    // Shifts
     LEFT_SHIFT, RIGHT_SHIFT
 };
 
 /**
  * @enum ConcatOp
- * @brief Concatenation operator.
+ * @brief String concatenation operators.
  */
-enum class ConcatOp { UNKNOWN = 0, CONCAT };
+enum class ConcatOp {
+    UNKNOWN = 0,
+    CONCAT  // ||
+};
 
 /**
  * @enum JsonOp
- * @brief JSON operator.
+ * @brief JSON operators.
  */
-enum class JsonOp { UNKNOWN = 0, ARROW, ARROW2, HASH_ARROW, HASH_ARROW2, AT, QUESTION, QUESTION_PIPE, QUESTION_AMP, HASH_MINUS };
+enum class JsonOp {
+    UNKNOWN = 0,
+    // Path access
+    ARROW, ARROW2,         // -> ->>
+    HASH_ARROW, HASH_ARROW2, // #> #>>
+    // Special operators
+    AT,                    // @
+    QUESTION,              // ?
+    QUESTION_PIPE,         // ?|
+    QUESTION_AMP,          // ?&
+    HASH_MINUS            // #-
+};
 
 /**
  * @enum RegexOp
- * @brief Regular expression operator.
+ * @brief Regular expression operators.
  */
-enum class RegexOp { UNKNOWN = 0, TILDE, NOT_TILDE, TILDE_STAR, NOT_TILDE_STAR };
+enum class RegexOp {
+    UNKNOWN = 0,
+    TILDE,           // ~
+    NOT_TILDE,       // !~
+    TILDE_STAR,      // ~*
+    NOT_TILDE_STAR   // !~*
+};
 
-// ---------------- Date/Time part identifiers ----------------
+// ---------------- Identifiers ----------------
+
+/**
+ * @enum IdentifierCategory
+ * @brief Database object and identifier types.
+ */
+enum class IdentifierCategory {
+    UNKNOWN = 0,
+    // Schema objects
+    TABLE, VIEW, PROCEDURE, FUNCTION, TRIGGER,
+    INDEX, CONSTRAINT, SEQUENCE,
+    // Database objects
+    SCHEMA, DATABASE,
+    // User objects
+    USER_DEFINED_TYPE, ROLE, USER,
+    // Special tables
+    EXTERNAL_TABLE, TEMP_TABLE, GLOBAL_TEMP_TABLE,
+    // Variables
+    USER_VARIABLE, SYSTEM_VARIABLE,
+    // Other identifiers
+    COLUMN, PARAMETER, LABEL
+};
+
+// ---------------- Literals ----------------
+
+/**
+ * @enum LiteralCategory
+ * @brief Literal value types.
+ */
+enum class LiteralCategory {
+    UNKNOWN = 0,
+    // String types
+    STRING, ESCAPE_STRING, CHAR,
+    // Numeric types
+    INTEGER, FLOAT,
+    // Binary types
+    BINARY, HEX,
+    // Date/Time types
+    DATE, TIME, DATETIME, INTERVAL,
+    // Special types
+    UUID, ARRAY, JSON, XML,
+    // Other types
+    BOOLEAN, NULL_VALUE
+};
+
+// ---------------- Date/Time Components ----------------
 
 /**
  * @enum DateTimePart
- * @brief Identifiers for SQL date/time parts.
+ * @brief Date/time component identifiers.
  */
 enum class DateTimePart {
     UNKNOWN = 0,
-    YEAR, QUARTER, MONTH, DAY_OF_YEAR, DAY, WEEK, ISO_WEEK, WEEKDAY,
-    HOUR, MINUTE, SECOND, MILLISECOND, MICROSECOND, NANOSECOND, TIMEZONE_OFFSET
+    // Date parts
+    YEAR, QUARTER, MONTH,
+    DAY_OF_YEAR, DAY,
+    WEEK, ISO_WEEK, WEEKDAY,
+    // Time parts
+    HOUR, MINUTE, SECOND,
+    MILLISECOND, MICROSECOND, NANOSECOND,
+    // Zone
+    TIMEZONE_OFFSET
 };
 
-// ---------------- Punctuator and delimiter enums ----------------
+// ---------------- Delimiters and Punctuation ----------------
 
 /**
  * @enum CommonSymbol
@@ -344,29 +595,48 @@ enum class DateTimePart {
  */
 enum class CommonSymbol {
     UNKNOWN = 0,
-    COMMA, SEMICOLON, LPAREN, RPAREN, LBRACE, RBRACE, LBRACKET, RBRACKET, DOT, COLON, PARAM_MARKER
+    // Separators
+    COMMA, SEMICOLON,
+    // Grouping
+    LPAREN, RPAREN,      // ()
+    LBRACE, RBRACE,      // {}
+    LBRACKET, RBRACKET,  // []
+    // Others
+    DOT, COLON,         // . :
+    PARAM_MARKER        // ?
 };
 
 /**
  * @enum TSQLSymbol
  * @brief TSQL-specific symbols.
  */
-enum class TSQLSymbol { UNKNOWN = 0, DOT, COLON, DOUBLE_COLON };
+enum class TSQLSymbol {
+    UNKNOWN = 0,
+    DOT,           // .
+    COLON,         // :
+    DOUBLE_COLON   // ::
+};
 
 /**
  * @enum StringDelimiter
  * @brief String delimiter types.
  */
-enum class StringDelimiter { UNKNOWN = 0, SINGLE_QUOTE, DOUBLE_QUOTE, BACKTICK, DOLLAR_QUOTE };
+enum class StringDelimiter {
+    UNKNOWN = 0,
+    SINGLE_QUOTE,  // '
+    DOUBLE_QUOTE,  // "
+    BACKTICK,      // `
+    DOLLAR_QUOTE   // $$
+};
 
-// ---------------- Comment category enum ----------------
+// ---------------- Comments ----------------
 
 /**
  * @enum CommentType
- * @brief SQL comment type.
+ * @brief SQL comment types.
  */
 enum class CommentType {
     UNKNOWN = 0,
-    SINGLE_LINE,
-    MULTI_LINE
+    SINGLE_LINE,  // --comment
+    MULTI_LINE    // /*comment*/
 };

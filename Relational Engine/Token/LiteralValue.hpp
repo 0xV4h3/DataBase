@@ -1,417 +1,175 @@
-#pragma once
-#include <string>
-#include <vector>
-#include <memory>
-#include <variant>
-#include <cstdint>
-#include "TokenEnums.hpp"
-
 /**
  * @file LiteralValue.hpp
- * @brief Base class and subclasses for all literal values used in tokens.
+ * @brief Base class for all literal values used in tokens.
  * @details
- * Provides an abstract interface and concrete implementations for SQL literal values.
- * Used for typed value storage, comparison, and evaluation in SQL parsing and execution.
+ * Provides an abstract interface for SQL literal values with validation,
+ * comparison, and operation support.
  */
 
- // -----------------------------------------------------------------------------
- // Base class for all literal values
- // -----------------------------------------------------------------------------
+#pragma once
+#include <string>
+#include <sstream>
+#include <memory>
+#include "TokenEnums.hpp"
 
- /**
-  * @class LiteralValue
-  * @brief Abstract base class for all literal values.
-  * @details
-  * Provides virtual interfaces for string conversion, cloning, and value operations.
-  */
 class LiteralValue {
 public:
+    // === Constructors & Destructor ===
+
+    LiteralValue() = default;
+
+    // Rule of five for proper memory management
+    LiteralValue(const LiteralValue&) = default;
+    LiteralValue(LiteralValue&&) noexcept = default;
+    LiteralValue& operator=(const LiteralValue&) = default;
+    LiteralValue& operator=(LiteralValue&&) noexcept = default;
     virtual ~LiteralValue() = default;
+
+    // === Core Interface ===
 
     /**
      * @brief Converts the literal value to a string representation.
-     * @return String value.
+     * @return String representation of the value
      */
     virtual std::string toString() const = 0;
 
     /**
-     * @brief Clones the literal value.
-     * @return Unique pointer to a copy of the value.
+     * @brief Creates a deep copy of the literal value.
+     * @return Unique pointer to the cloned value
      */
     virtual std::unique_ptr<LiteralValue> clone() const = 0;
 
-    // Arithmetic operations
-    virtual std::unique_ptr<LiteralValue> applyArithmetic(const LiteralValue& rhs, ArithmeticOp op) const;
-    // Assignment operations
-    virtual std::unique_ptr<LiteralValue> applyAssign(const LiteralValue& rhs, AssignOp op) const;
-    // Comparison operations
-    virtual bool compare(const LiteralValue& rhs, ComparisonOp op) const;
-    // Logical operations
-    virtual std::unique_ptr<LiteralValue> applyLogical(const LiteralValue& rhs, LogicalOp op) const;
-    // Bitwise operations
-    virtual std::unique_ptr<LiteralValue> applyBitwise(const LiteralValue& rhs, BitwiseOp op) const;
-    // Concatenation (for strings, arrays, etc.)
-    virtual std::unique_ptr<LiteralValue> applyConcat(const LiteralValue& rhs, ConcatOp op = ConcatOp::CONCAT) const;
-    // JSON operations
-    virtual std::unique_ptr<LiteralValue> applyJson(const LiteralValue& rhs, JsonOp op) const;
-    // Regex operations (for pattern matching)
-    virtual bool applyRegex(const LiteralValue& pattern, RegexOp op) const;
-};
-
-// -----------------------------------------------------------------------------
-// Integer literal
-// -----------------------------------------------------------------------------
-
-/**
- * @class IntegerLiteralValue
- * @brief Represents an integer literal value.
- */
-class IntegerLiteralValue : public LiteralValue {
-public:
-    int64_t value; ///< The integer value.
-
-    explicit IntegerLiteralValue(int64_t v);
-
-    std::string toString() const override;
-    std::unique_ptr<LiteralValue> clone() const override;
-
-    std::unique_ptr<LiteralValue> applyArithmetic(const LiteralValue& rhs, ArithmeticOp op) const override;
-    std::unique_ptr<LiteralValue> applyBitwise(const LiteralValue& rhs, BitwiseOp op) const override;
-    bool compare(const LiteralValue& rhs, ComparisonOp op) const override;
-};
-
-// -----------------------------------------------------------------------------
-// Floating-point literal
-// -----------------------------------------------------------------------------
-
-/**
- * @class FloatLiteralValue
- * @brief Represents a floating-point literal value.
- */
-class FloatLiteralValue : public LiteralValue {
-public:
-    double value; ///< The floating-point value.
-
-    explicit FloatLiteralValue(double v);
-
-    std::string toString() const override;
-    std::unique_ptr<LiteralValue> clone() const override;
-
-    std::unique_ptr<LiteralValue> applyArithmetic(const LiteralValue& rhs, ArithmeticOp op) const override;
-    bool compare(const LiteralValue& rhs, ComparisonOp op) const override;
-};
-
-// -----------------------------------------------------------------------------
-// String literal
-// -----------------------------------------------------------------------------
-
-/**
- * @class StringLiteralValue
- * @brief Represents a string literal value.
- */
-class StringLiteralValue : public LiteralValue {
-public:
-    std::string value; ///< The string value.
-
-    explicit StringLiteralValue(std::string v);
-
-    std::string toString() const override;
-    std::unique_ptr<LiteralValue> clone() const override;
-
-    std::unique_ptr<LiteralValue> applyConcat(const LiteralValue& rhs, ConcatOp op = ConcatOp::CONCAT) const override;
-    bool compare(const LiteralValue& rhs, ComparisonOp op) const override;
-    bool applyRegex(const LiteralValue& pattern, RegexOp op) const override;
-};
-
-// -----------------------------------------------------------------------------
-// Char literal (single Unicode code unit, usually for SQL CHAR or C-style char)
-// -----------------------------------------------------------------------------
-
-/**
- * @class CharLiteralValue
- * @brief Represents a character literal value (single Unicode code unit).
- */
-class CharLiteralValue : public LiteralValue {
-public:
-    char value; ///< The character value.
-
-    explicit CharLiteralValue(char v);
-
-    std::string toString() const override;
-    std::unique_ptr<LiteralValue> clone() const override;
-    bool compare(const LiteralValue& rhs, ComparisonOp op) const override;
-};
-
-// -----------------------------------------------------------------------------
-// Escape String literal (for storing strings with escape sequences)
-// -----------------------------------------------------------------------------
-
-/**
- * @class EscapeStringLiteralValue
- * @brief Stores a string literal with escape sequences.
- * @details
- * Provides access to the raw (escaped) string and unescaped value.
- */
-class EscapeStringLiteralValue : public LiteralValue {
-public:
-    std::string value; ///< Stores the escaped string.
-
-    explicit EscapeStringLiteralValue(const std::string& v);
-
-    std::string toString() const override;
-    std::unique_ptr<LiteralValue> clone() const override;
-    bool compare(const LiteralValue& rhs, ComparisonOp op) const override;
+    // === Validation ===
 
     /**
-     * @brief Returns the raw (escaped) string.
+     * @brief Checks if the literal value is valid.
+     * @return true if value is in valid state
      */
-    std::string raw() const;
-};
+    virtual bool isValid() const = 0;
 
-// -----------------------------------------------------------------------------
-// Boolean literal
-// -----------------------------------------------------------------------------
+    /**
+     * @brief Validates the literal value's state.
+     * @throws std::invalid_argument if state is invalid
+     */
+    virtual void validate() const = 0;
 
-/**
- * @class BooleanLiteralValue
- * @brief Represents a boolean literal value.
- */
-class BooleanLiteralValue : public LiteralValue {
-public:
-    bool value; ///< The boolean value.
+    // === Value Operations ===
 
-    explicit BooleanLiteralValue(bool v);
+    /**
+     * @brief Compares this value with another for equality.
+     * @param other Value to compare with
+     * @return true if values are equal
+     */
+    virtual bool equals(const LiteralValue& other) const = 0;
 
-    std::string toString() const override;
-    std::unique_ptr<LiteralValue> clone() const override;
+    /**
+     * @brief Checks if values are exactly identical.
+     * @param other Value to compare with
+     * @return true if values are identical
+     */
+    virtual bool identical(const LiteralValue& other) const {
+        return typeid(*this) == typeid(other) && equals(other);
+    }
 
-    std::unique_ptr<LiteralValue> applyLogical(const LiteralValue& rhs, LogicalOp op) const override;
-    bool compare(const LiteralValue& rhs, ComparisonOp op) const override;
-};
+    // === Arithmetic Operations ===
 
-// -----------------------------------------------------------------------------
-// Null literal
-// -----------------------------------------------------------------------------
+    /**
+     * @brief Applies arithmetic operation with another value.
+     * @param rhs Right-hand operand
+     * @param op Arithmetic operation to perform
+     * @return Result of operation or nullptr if not supported
+     */
+    virtual std::unique_ptr<LiteralValue> applyArithmetic(
+        const LiteralValue& rhs, ArithmeticOp op) const {
+        return nullptr;
+    }
 
-/**
- * @class NullLiteralValue
- * @brief Represents a SQL NULL literal value.
- */
-class NullLiteralValue : public LiteralValue {
-public:
-    NullLiteralValue();
+    // === Comparison Operations ===
 
-    std::string toString() const override;
-    std::unique_ptr<LiteralValue> clone() const override;
-    bool compare(const LiteralValue& rhs, ComparisonOp op) const override;
-};
+    /**
+     * @brief Compares this value with another using given operator.
+     * @param rhs Right-hand operand
+     * @param op Comparison operation to perform
+     * @return Result of comparison or false if not supported
+     */
+    virtual bool compare(const LiteralValue& rhs, ComparisonOp op) const {
+        return false;
+    }
 
-// -----------------------------------------------------------------------------
-// Binary/hex literal
-// -----------------------------------------------------------------------------
+    // === Logical Operations ===
 
-/**
- * @class BinaryLiteralValue
- * @brief Represents a binary or hexadecimal literal value.
- */
-class BinaryLiteralValue : public LiteralValue {
-public:
-    std::vector<uint8_t> value; ///< The binary value.
+    /**
+     * @brief Applies logical operation with another value.
+     * @param rhs Right-hand operand
+     * @param op Logical operation to perform
+     * @return Result of operation or nullptr if not supported
+     */
+    virtual std::unique_ptr<LiteralValue> applyLogical(
+        const LiteralValue& rhs, LogicalOp op) const {
+        return nullptr;
+    }
 
-    explicit BinaryLiteralValue(const std::vector<uint8_t>& v);
+    // === Bitwise Operations ===
 
-    std::string toString() const override;
-    std::unique_ptr<LiteralValue> clone() const override;
-    bool compare(const LiteralValue& rhs, ComparisonOp op) const override;
-};
+    /**
+     * @brief Applies bitwise operation with another value.
+     * @param rhs Right-hand operand
+     * @param op Bitwise operation to perform
+     * @return Result of operation or nullptr if not supported
+     */
+    virtual std::unique_ptr<LiteralValue> applyBitwise(
+        const LiteralValue& rhs, BitwiseOp op) const {
+        return nullptr;
+    }
 
-// -----------------------------------------------------------------------------
-// Date literal
-// -----------------------------------------------------------------------------
+    // === String Operations ===
 
-/**
- * @class DateLiteralValue
- * @brief Represents a date literal value (YYYY-MM-DD).
- */
-class DateLiteralValue : public LiteralValue {
-public:
-    std::string value; ///< Date string in ISO format.
+    /**
+     * @brief Applies concatenation with another value.
+     * @param rhs Right-hand operand
+     * @param op Concatenation operation to perform
+     * @return Result of concatenation or nullptr if not supported
+     */
+    virtual std::unique_ptr<LiteralValue> applyConcat(
+        const LiteralValue& rhs, ConcatOp op = ConcatOp::CONCAT) const {
+        return nullptr;
+    }
 
-    explicit DateLiteralValue(const std::string& v);
+    // === Pattern Matching ===
 
-    std::string toString() const override;
-    std::unique_ptr<LiteralValue> clone() const override;
-    bool compare(const LiteralValue& rhs, ComparisonOp op) const override;
-    std::unique_ptr<LiteralValue> applyArithmetic(const LiteralValue& rhs, ArithmeticOp op) const override;
-};
+    /**
+     * @brief Applies regex pattern matching with another value.
+     * @param pattern Pattern to match against
+     * @param op Regex operation to perform
+     * @return Result of pattern matching or false if not supported
+     */
+    virtual bool applyRegex(
+        const LiteralValue& pattern, RegexOp op) const {
+        return false;
+    }
 
-// -----------------------------------------------------------------------------
-// Time literal
-// -----------------------------------------------------------------------------
+    // === JSON Operations ===
 
-/**
- * @class TimeLiteralValue
- * @brief Represents a time literal value (HH:MM:SS).
- */
-class TimeLiteralValue : public LiteralValue {
-public:
-    std::string value; ///< Time string in ISO format.
+    /**
+     * @brief Applies JSON operation with another value.
+     * @param rhs Right-hand operand
+     * @param op JSON operation to perform
+     * @return Result of operation or nullptr if not supported
+     */
+    virtual std::unique_ptr<LiteralValue> applyJson(
+        const LiteralValue& rhs, JsonOp op) const {
+        return nullptr;
+    }
 
-    explicit TimeLiteralValue(const std::string& v);
-
-    std::string toString() const override;
-    std::unique_ptr<LiteralValue> clone() const override;
-    bool compare(const LiteralValue& rhs, ComparisonOp op) const override;
-    std::unique_ptr<LiteralValue> applyArithmetic(const LiteralValue& rhs, ArithmeticOp op) const override;
-};
-
-// -----------------------------------------------------------------------------
-// DateTime literal
-// -----------------------------------------------------------------------------
-
-/**
- * @class DateTimeLiteralValue
- * @brief Represents a date-time literal value (YYYY-MM-DD HH:MM:SS).
- */
-class DateTimeLiteralValue : public LiteralValue {
-public:
-    std::string value; ///< DateTime string in ISO format.
-
-    explicit DateTimeLiteralValue(const std::string& v);
-
-    std::string toString() const override;
-    std::unique_ptr<LiteralValue> clone() const override;
-    bool compare(const LiteralValue& rhs, ComparisonOp op) const override;
-    std::unique_ptr<LiteralValue> applyArithmetic(const LiteralValue& rhs, ArithmeticOp op) const override;
-};
-
-// -----------------------------------------------------------------------------
-// UUID literal (as string, with real UUID operations)
-// -----------------------------------------------------------------------------
-
-/**
- * @class UUIDLiteralValue
- * @brief Represents a UUID literal value (canonical UUID string).
- */
-class UUIDLiteralValue : public LiteralValue {
-public:
-    std::string value; ///< Canonical UUID string.
-
-    explicit UUIDLiteralValue(const std::string& v);
-
-    std::string toString() const override;
-    std::unique_ptr<LiteralValue> clone() const override;
-    bool compare(const LiteralValue& rhs, ComparisonOp op) const override;
-
-    // Check UUID validity
-    bool isValid() const;
-
-    // Generate new random UUID (static)
-    static UUIDLiteralValue generate();
-};
-
-// -----------------------------------------------------------------------------
-// JSON literal (as string, with rich JSON operations)
-// -----------------------------------------------------------------------------
-
-/**
- * @class JSONLiteralValue
- * @brief Represents a JSON literal value (as string).
- * @details
- * Provides SQL-like JSON operations and rich type/content checks.
- */
-class JSONLiteralValue : public LiteralValue {
-public:
-    std::string value; ///< JSON value as string.
-
-    explicit JSONLiteralValue(const std::string& v);
-
-    std::string toString() const override;
-    std::unique_ptr<LiteralValue> clone() const override;
-    std::unique_ptr<LiteralValue> applyJson(const LiteralValue& rhs, JsonOp op) const override;
-    bool compare(const LiteralValue& rhs, ComparisonOp op) const override;
-
-    // --- Extra methods for DB core (all noexcept if parse fails) ---
-
-    // Check JSON type
-    bool isObject() const;    ///< True if JSON is an object.
-    bool isArray() const;     ///< True if JSON is an array.
-    bool isString() const;    ///< True if JSON is a string.
-    bool isNumber() const;    ///< True if JSON is a number.
-    bool isBoolean() const;   ///< True if JSON is a boolean.
-    bool isNull() const;      ///< True if JSON is null.
-
-    // Check if key exists at top level (object only)
-    bool contains(const std::string& key) const;
-
-    // Get value by key (object only), result is JSON
-    std::unique_ptr<LiteralValue> getKey(const std::string& key) const;
-
-    // Get value by path (vector of keys), result is JSON
-    std::unique_ptr<LiteralValue> getPath(const std::vector<std::string>& path) const;
-
-    // Cast to string/number/bool (for SQL semantics)
-    std::unique_ptr<LiteralValue> toStringLiteral() const;
-    std::unique_ptr<LiteralValue> toIntegerLiteral() const;
-    std::unique_ptr<LiteralValue> toFloatLiteral() const;
-    std::unique_ptr<LiteralValue> toBooleanLiteral() const;
-};
-
-// -----------------------------------------------------------------------------
-// XML literal (as string, with real XML operations)
-// -----------------------------------------------------------------------------
-
-/**
- * @class XMLLiteralValue
- * @brief Represents an XML literal value (as string).
- * @details
- * Provides XPath and element/attribute access.
- */
-class XMLLiteralValue : public LiteralValue {
-public:
-    std::string value; ///< XML value as string.
-
-    explicit XMLLiteralValue(const std::string& v);
-
-    std::string toString() const override;
-    std::unique_ptr<LiteralValue> clone() const override;
-
-    // XML operations (XPath, element/attribute access)
-    std::unique_ptr<LiteralValue> applyXml(const std::string& xpath) const;
-
-    bool compare(const LiteralValue& rhs, ComparisonOp op) const override;
-
-    // Check if XML is valid and root node exists
-    bool isValid() const;
-    bool hasElement(const std::string& name) const;
-
-    // Get attribute value by name (from root)
-    std::unique_ptr<LiteralValue> getAttribute(const std::string& attr) const;
-
-    // Get text content of root element
-    std::unique_ptr<LiteralValue> getText() const;
-
-    // Find elements by XPath (returns XML or string literal)
-    std::vector<std::unique_ptr<LiteralValue>> findByXPath(const std::string& xpath) const;
-};
-
-// -----------------------------------------------------------------------------
-// Array literal (vector of LiteralValue)
-// -----------------------------------------------------------------------------
-
-/**
- * @class ArrayLiteralValue
- * @brief Represents an array literal value (vector of LiteralValue).
- */
-class ArrayLiteralValue : public LiteralValue {
-public:
-    std::vector<std::shared_ptr<LiteralValue>> elements; ///< Elements of the array.
-
-    explicit ArrayLiteralValue(std::vector<std::shared_ptr<LiteralValue>> elems);
-
-    std::string toString() const override;
-    std::unique_ptr<LiteralValue> clone() const override;
-
-    std::unique_ptr<LiteralValue> applyConcat(const LiteralValue& rhs, ConcatOp op = ConcatOp::CONCAT) const override;
-    bool compare(const LiteralValue& rhs, ComparisonOp op) const override;
+protected:
+    /**
+     * @brief Checks if given value is of specified type.
+     * @tparam T Expected value type
+     * @param value Value to check
+     * @return true if value is of type T
+     */
+    template<typename T>
+    bool isType(const LiteralValue& value) const {
+        return dynamic_cast<const T*>(&value) != nullptr;
+    }
 };

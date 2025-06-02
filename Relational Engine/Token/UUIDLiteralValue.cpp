@@ -1,65 +1,125 @@
 /**
  * @file UUIDLiteralValue.cpp
  * @brief Implementation of UUIDLiteralValue methods.
- * @details
- * Implements construction, string conversion, deep copy, comparison, validation, and generation for UUIDLiteralValue.
  */
 
-#include "LiteralValue.hpp"
-#include <uuid.h>
-#include <memory>
-#include <string>
-#include <algorithm>
+#include "UUIDLiteralValue.hpp"
 #include <random>
+#include <stdexcept>
+#include <regex>
 
-// --- Constructor ---
-UUIDLiteralValue::UUIDLiteralValue(const std::string& v) : value(v) {}
+ // === Constructors ===
 
-// --- Return UUID as string ---
+UUIDLiteralValue::UUIDLiteralValue()
+    : value("00000000-0000-0000-0000-000000000000")
+{
+}
+
+UUIDLiteralValue::UUIDLiteralValue(const std::string& v)
+    : value(v)
+{
+    validate();
+}
+
+// === Core Interface ===
+
 std::string UUIDLiteralValue::toString() const {
     return value;
 }
 
-// --- Deep copy ---
 std::unique_ptr<LiteralValue> UUIDLiteralValue::clone() const {
     return std::make_unique<UUIDLiteralValue>(value);
 }
 
-// --- Compare by parsed UUID, not text ---
-bool UUIDLiteralValue::compare(const LiteralValue& rhs, ComparisonOp op) const {
-    const auto* r = dynamic_cast<const UUIDLiteralValue*>(&rhs);
-    if (!r) return false;
+// === Protected Methods ===
+
+std::optional<uuids::uuid> UUIDLiteralValue::parseUUID() const {
     try {
-        auto opt_a = uuids::uuid::from_string(value);
-        auto opt_b = uuids::uuid::from_string(r->value);
-        if (!opt_a.has_value() || !opt_b.has_value()) return false;
-        const auto& uuid_a = opt_a.value();
-        const auto& uuid_b = opt_b.value();
-        switch (op) {
-        case ComparisonOp::EQUAL:        return uuid_a == uuid_b;
-        case ComparisonOp::NOT_EQUAL:    return uuid_a != uuid_b;
-        case ComparisonOp::LESS:         return uuid_a < uuid_b;
-        case ComparisonOp::GREATER:      return uuid_b < uuid_a;
-        case ComparisonOp::LESS_EQUAL:   return !(uuid_b < uuid_a);
-        case ComparisonOp::GREATER_EQUAL:return !(uuid_a < uuid_b);
-        default: return false;
-        }
+        return uuids::uuid::from_string(value);
     }
     catch (...) {
-        return false;
+        return std::nullopt;
     }
 }
 
-// --- Check UUID validity ---
-bool UUIDLiteralValue::isValid() const {
-    return uuids::uuid::from_string(value).has_value();
+bool UUIDLiteralValue::validateFormat(const std::string& uuidStr) {
+    // UUID format: 8-4-4-4-12 hexadecimal digits
+    static const std::regex uuidRegex(
+        "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-"
+        "[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+    );
+    return std::regex_match(uuidStr, uuidRegex);
 }
 
-// --- Generate new random UUID (static) ---
+// === Validation ===
+
+bool UUIDLiteralValue::isValid() const {
+    return validateFormat(value) && parseUUID().has_value();
+}
+
+void UUIDLiteralValue::validate() const {
+    if (!validateFormat(value)) {
+        throw std::invalid_argument(
+            "Invalid UUID format: " + value);
+    }
+    if (!parseUUID().has_value()) {
+        throw std::invalid_argument(
+            "Invalid UUID value: " + value);
+    }
+}
+
+bool UUIDLiteralValue::equals(const LiteralValue& other) const {
+    const auto* uuidOther =
+        dynamic_cast<const UUIDLiteralValue*>(&other);
+    if (!uuidOther) return false;
+
+    auto uuid1 = parseUUID();
+    auto uuid2 = uuidOther->parseUUID();
+
+    return uuid1.has_value() && uuid2.has_value() &&
+        uuid1.value() == uuid2.value();
+}
+
+// === Operations ===
+
+bool UUIDLiteralValue::compare(
+    const LiteralValue& rhs, ComparisonOp op) const
+{
+    const auto* r = dynamic_cast<const UUIDLiteralValue*>(&rhs);
+    if (!r) return false;
+
+    auto uuid1 = parseUUID();
+    auto uuid2 = r->parseUUID();
+
+    if (!uuid1.has_value() || !uuid2.has_value()) {
+        return false;
+    }
+
+    const auto& uuid_a = uuid1.value();
+    const auto& uuid_b = uuid2.value();
+
+    switch (op) {
+    case ComparisonOp::EQUAL:         return uuid_a == uuid_b;
+    case ComparisonOp::NOT_EQUAL:     return uuid_a != uuid_b;
+    case ComparisonOp::LESS:          return uuid_a < uuid_b;
+    case ComparisonOp::GREATER:       return uuid_b < uuid_a;
+    case ComparisonOp::LESS_EQUAL:    return !(uuid_b < uuid_a);
+    case ComparisonOp::GREATER_EQUAL: return !(uuid_a < uuid_b);
+    default:                          return false;
+    }
+}
+
+// === Static Methods ===
+
 UUIDLiteralValue UUIDLiteralValue::generate() {
     static std::random_device rd;
-    static std::mt19937 mt(rd());
-    static uuids::uuid_random_generator gen{ mt };
-    uuids::uuid new_uuid = gen();
+    static std::mt19937 gen(rd());
+    static uuids::uuid_random_generator uuid_gen{ gen };
+
+    uuids::uuid new_uuid = uuid_gen();
     return UUIDLiteralValue(uuids::to_string(new_uuid));
+}
+
+UUIDLiteralValue UUIDLiteralValue::nil() {
+    return UUIDLiteralValue();
 }

@@ -16,9 +16,6 @@
     <Filter Include="External">
       <UniqueIdentifier>{ca089886-9dcc-45e3-818e-62a8062bd1c2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Literal SubClasses">
-      <UniqueIdentifier>{dc0a881c-67ec-4328-88dc-eaca56dbe5e6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Literal Class">
       <UniqueIdentifier>{7f0150ee-e88e-4576-a354-9ba7bb47c787}</UniqueIdentifier>
     </Filter>
@@ -27,6 +24,12 @@
     </Filter>
     <Filter Include="Info Classes">
       <UniqueIdentifier>{6da7aff5-4d53-4c8b-8ec2-3472fc9333e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Literal SubClasses Implementations">
+      <UniqueIdentifier>{dc0a881c-67ec-4328-88dc-eaca56dbe5e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Literal SubClasses Interfaces">
+      <UniqueIdentifier>{3b9daeae-4379-427d-9c6b-242e0b7da3f6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -75,58 +78,115 @@
     <ClInclude Include="PunctuatorInfo.hpp">
       <Filter>Info Classes</Filter>
     </ClInclude>
+    <ClInclude Include="IntegerLiteralValue.hpp">
+      <Filter>Literal SubClasses Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="FloatLiteralValue.hpp">
+      <Filter>Literal SubClasses Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="StringLiteralValue.hpp">
+      <Filter>Literal SubClasses Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="CharLiteralValue.hpp">
+      <Filter>Literal SubClasses Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="EscapeStringLiteralValue.hpp">
+      <Filter>Literal SubClasses Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="BinaryLiteralValue.hpp">
+      <Filter>Literal SubClasses Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="BooleanLiteralValue.hpp">
+      <Filter>Literal SubClasses Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="NullLiteralValue.hpp">
+      <Filter>Literal SubClasses Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="HexLiteralValue.hpp">
+      <Filter>Literal SubClasses Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="DateLiteralValue.hpp">
+      <Filter>Literal SubClasses Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeLiteralValue.hpp">
+      <Filter>Literal SubClasses Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="ArrayLiteralValue.hpp">
+      <Filter>Literal SubClasses Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="DateTimeLiteralValue.hpp">
+      <Filter>Literal SubClasses Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="IntervalLiteralValue.hpp">
+      <Filter>Literal SubClasses Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="JSONLiteralValue.hpp">
+      <Filter>Literal SubClasses Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="UUIDLiteralValue.hpp">
+      <Filter>Literal SubClasses Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="XMLLiteralValue.hpp">
+      <Filter>Literal SubClasses Interfaces</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="external\pugixml\pugixml.cpp">
       <Filter>External</Filter>
     </ClCompile>
-    <ClCompile Include="LiteralValue.cpp">
-      <Filter>Literal Class</Filter>
-    </ClCompile>
     <ClCompile Include="ArrayLiteralValue.cpp">
-      <Filter>Literal SubClasses</Filter>
+      <Filter>Literal SubClasses Implementations</Filter>
     </ClCompile>
     <ClCompile Include="BinaryLiteralValue.cpp">
-      <Filter>Literal SubClasses</Filter>
+      <Filter>Literal SubClasses Implementations</Filter>
     </ClCompile>
     <ClCompile Include="BooleanLiteralValue.cpp">
-      <Filter>Literal SubClasses</Filter>
+      <Filter>Literal SubClasses Implementations</Filter>
     </ClCompile>
     <ClCompile Include="CharLiteralValue.cpp">
-      <Filter>Literal SubClasses</Filter>
+      <Filter>Literal SubClasses Implementations</Filter>
     </ClCompile>
     <ClCompile Include="DateLiteralValue.cpp">
-      <Filter>Literal SubClasses</Filter>
+      <Filter>Literal SubClasses Implementations</Filter>
     </ClCompile>
     <ClCompile Include="DateTimeLiteralValue.cpp">
-      <Filter>Literal SubClasses</Filter>
+      <Filter>Literal SubClasses Implementations</Filter>
     </ClCompile>
     <ClCompile Include="EscapeStringLiteralValue.cpp">
-      <Filter>Literal SubClasses</Filter>
+      <Filter>Literal SubClasses Implementations</Filter>
     </ClCompile>
     <ClCompile Include="FloatLiteralValue.cpp">
-      <Filter>Literal SubClasses</Filter>
+      <Filter>Literal SubClasses Implementations</Filter>
     </ClCompile>
     <ClCompile Include="IntegerLiteralValue.cpp">
-      <Filter>Literal SubClasses</Filter>
+      <Filter>Literal SubClasses Implementations</Filter>
     </ClCompile>
     <ClCompile Include="JSONLiteralValue.cpp">
-      <Filter>Literal SubClasses</Filter>
+      <Filter>Literal SubClasses Implementations</Filter>
     </ClCompile>
     <ClCompile Include="NullLiteralValue.cpp">
-      <Filter>Literal SubClasses</Filter>
+      <Filter>Literal SubClasses Implementations</Filter>
     </ClCompile>
     <ClCompile Include="StringLiteralValue.cpp">
-      <Filter>Literal SubClasses</Filter>
+      <Filter>Literal SubClasses Implementations</Filter>
     </ClCompile>
     <ClCompile Include="TimeLiteralValue.cpp">
-      <Filter>Literal SubClasses</Filter>
+      <Filter>Literal SubClasses Implementations</Filter>
     </ClCompile>
     <ClCompile Include="UUIDLiteralValue.cpp">
-      <Filter>Literal SubClasses</Filter>
+      <Filter>Literal SubClasses Implementations</Filter>
     </ClCompile>
     <ClCompile Include="XMLLiteralValue.cpp">
-      <Filter>Literal SubClasses</Filter>
+      <Filter>Literal SubClasses Implementations</Filter>
+    </ClCompile>
+    <ClCompile Include="HexLiteralValue.cpp">
+      <Filter>Literal SubClasses Implementations</Filter>
+    </ClCompile>
+    <ClCompile Include="IntervalLiteralValue.cpp">
+      <Filter>Literal SubClasses Implementations</Filter>
+    </ClCompile>
+    <ClCompile Include="TokenUtils.cpp">
+      <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

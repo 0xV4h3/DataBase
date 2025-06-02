@@ -1,12 +1,27 @@
 #pragma once
 #include <string>
+#include <unordered_map>
 #include "TokenEnums.hpp"
 
 /**
- * @brief Utility class for converting lexer token enums to string representations.
+ * @brief Utility class for lexical analysis operations.
+ * @details
+ * Provides utilities for:
+ * - Token type conversions and validation
+ * - Character classification
+ * - Operator precedence management
+ * - Symbol lookup and validation
+ * - Error handling and reporting
  */
 class LexerUtils {
 public:
+    // ====================== Type Conversion Methods ======================
+
+    /**
+     * @brief Convert token type enum to string representation.
+     * @param type Token type to convert
+     * @return String representation of the token type
+     */
     static std::string tokenTypeToString(TokenType type) {
         switch (type) {
         case TokenType::KEYWORD:      return "KEYWORD";
@@ -30,7 +45,7 @@ public:
         case KeywordCategory::CLAUSE:        return "ClauseKeyword";
         case KeywordCategory::CTE:           return "CTEKeyword";
         case KeywordCategory::SETOP:         return "SetOpKeyword";
-        case KeywordCategory::WORD_OP:       return "WordOperatorKeyword";
+        case KeywordCategory::PREDICATE:     return "PredicateKeyword";  
         case KeywordCategory::LOGICAL_CONST: return "LogicalConstantKeyword";
         case KeywordCategory::TRANSACTION:   return "TransactionKeyword";
         case KeywordCategory::SECURITY:      return "SecurityKeyword";
@@ -43,30 +58,18 @@ public:
 
     static std::string operatorCategoryToString(OperatorCategory cat) {
         switch (cat) {
-        case OperatorCategory::ARITHMETIC:   return "ArithmeticOp";
-        case OperatorCategory::ASSIGN:       return "AssignOp";
-        case OperatorCategory::COMPARISON:   return "ComparisonOp";
-        case OperatorCategory::LOGICAL:      return "LogicalOp";
-        case OperatorCategory::BITWISE:      return "BitwiseOp";
-        case OperatorCategory::CONCAT:       return "ConcatOp";
-        case OperatorCategory::JSON:         return "JsonOp";
-        case OperatorCategory::REGEX:        return "RegexOp";
-        case OperatorCategory::ARRAY:        return "ArrayOp";
-        case OperatorCategory::TYPECAST:     return "TypecastOp";
-        case OperatorCategory::UNKNOWN:      return "UNKNOWN";
-        default:                             return "UNKNOWN";
-        }
-    }
-
-    static std::string punctuatorCategoryToString(PunctuatorCategory cat) {
-        switch (cat) {
-        case PunctuatorCategory::COMMON:       return "CommonSymbol";
-        case PunctuatorCategory::TSQL:         return "TSQLSymbol";
-        case PunctuatorCategory::STRING_DELIM: return "StringDelimiter";
-        case PunctuatorCategory::DOLLAR_QUOTE: return "DollarQuote";
-        case PunctuatorCategory::PARAM_MARKER: return "ParamMarker";
-        case PunctuatorCategory::UNKNOWN:      return "UNKNOWN";
-        default:                               return "UNKNOWN";
+        case OperatorCategory::ARITHMETIC: return "ArithmeticOp";
+        case OperatorCategory::ASSIGN:     return "AssignOp";
+        case OperatorCategory::COMPARISON: return "ComparisonOp";
+        case OperatorCategory::LOGICAL:    return "LogicalOp";
+        case OperatorCategory::BITWISE:    return "BitwiseOp";
+        case OperatorCategory::CONCAT:     return "ConcatOp";
+        case OperatorCategory::JSON:       return "JsonOp";
+        case OperatorCategory::REGEX:      return "RegexOp";
+        case OperatorCategory::ARRAY:      return "ArrayOp";
+        case OperatorCategory::TYPECAST:   return "TypecastOp";
+        case OperatorCategory::UNKNOWN:    return "UNKNOWN";
+        default:                           return "UNKNOWN";
         }
     }
 
@@ -124,20 +127,23 @@ public:
 
     static std::string DMLKeywordTypeToString(DMLKeyword kw) {
         switch (kw) {
-        case DMLKeyword::SELECT:     return "SELECT";
-        case DMLKeyword::INSERT:     return "INSERT";
-        case DMLKeyword::UPDATE:     return "UPDATE";
-        case DMLKeyword::DELETE:     return "DELETE";
-        case DMLKeyword::MERGE:      return "MERGE";
-        case DMLKeyword::EXECUTE:    return "EXECUTE";
-        case DMLKeyword::VALUES:     return "VALUES";
-        case DMLKeyword::OUTPUT:     return "OUTPUT";
-        case DMLKeyword::DEFAULT:    return "DEFAULT";
-        case DMLKeyword::INTO:       return "INTO";
-        case DMLKeyword::RETURNING:  return "RETURNING";
-        case DMLKeyword::USING:      return "USING";
-        case DMLKeyword::UNKNOWN:    return "UNKNOWN";
-        default:                     return "UNKNOWN";
+            // Core DML
+        case DMLKeyword::SELECT:    return "SELECT";
+        case DMLKeyword::INSERT:    return "INSERT";
+        case DMLKeyword::UPDATE:    return "UPDATE";
+        case DMLKeyword::DELETE:    return "DELETE";
+            // Extended DML
+        case DMLKeyword::MERGE:     return "MERGE";
+        case DMLKeyword::EXECUTE:   return "EXECUTE";
+        case DMLKeyword::VALUES:    return "VALUES";
+            // Clause modifiers
+        case DMLKeyword::OUTPUT:    return "OUTPUT";
+        case DMLKeyword::DEFAULT:   return "DEFAULT";
+        case DMLKeyword::INTO:      return "INTO";
+        case DMLKeyword::RETURNING: return "RETURNING";
+        case DMLKeyword::USING:     return "USING";
+        case DMLKeyword::UNKNOWN:   return "UNKNOWN";
+        default:                    return "UNKNOWN";
         }
     }
 
@@ -213,28 +219,28 @@ public:
 
     static std::string SetOpKeywordTypeToString(SetOpKeyword kw) {
         switch (kw) {
-        case SetOpKeyword::EXCEPT:    return "EXCEPT";
-        case SetOpKeyword::INTERSECT: return "INTERSECT";
         case SetOpKeyword::UNION:     return "UNION";
+        case SetOpKeyword::INTERSECT: return "INTERSECT";
+        case SetOpKeyword::EXCEPT:    return "EXCEPT";
         case SetOpKeyword::UNKNOWN:   return "UNKNOWN";
         default:                      return "UNKNOWN";
         }
     }
 
-    static std::string WordOperatorKeywordTypeToString(WordOperatorKeyword kw) {
+    static std::string PredicateKeywordTypeToString(PredicateKeyword kw) {  
         switch (kw) {
-        case WordOperatorKeyword::IN:      return "IN";
-        case WordOperatorKeyword::IS:      return "IS";
-        case WordOperatorKeyword::NOT:     return "NOT";
-        case WordOperatorKeyword::LIKE:    return "LIKE";
-        case WordOperatorKeyword::BETWEEN: return "BETWEEN";
-        case WordOperatorKeyword::EXISTS:  return "EXISTS";
-        case WordOperatorKeyword::ALL:     return "ALL";
-        case WordOperatorKeyword::ANY:     return "ANY";
-        case WordOperatorKeyword::SOME:    return "SOME";
-        case WordOperatorKeyword::UNIQUE:  return "UNIQUE";
-        case WordOperatorKeyword::UNKNOWN: return "UNKNOWN";
-        default:                           return "UNKNOWN";
+        case PredicateKeyword::IN:      return "IN";
+        case PredicateKeyword::IS:      return "IS";
+        case PredicateKeyword::LIKE:    return "LIKE";
+        case PredicateKeyword::BETWEEN: return "BETWEEN";
+        case PredicateKeyword::EXISTS:  return "EXISTS";
+        case PredicateKeyword::ALL:     return "ALL";
+        case PredicateKeyword::ANY:     return "ANY";
+        case PredicateKeyword::SOME:    return "SOME";
+        case PredicateKeyword::NOT:     return "NOT";
+        case PredicateKeyword::UNIQUE:  return "UNIQUE";
+        case PredicateKeyword::UNKNOWN: return "UNKNOWN";
+        default:                        return "UNKNOWN";
         }
     }
 
@@ -298,7 +304,6 @@ public:
 
     static std::string MiscKeywordTypeToString(MiscKeyword kw) {
         switch (kw) {
-        case MiscKeyword::AS:           return "AS";
         case MiscKeyword::CASE:         return "CASE";
         case MiscKeyword::WHEN:         return "WHEN";
         case MiscKeyword::THEN:         return "THEN";
@@ -323,15 +328,15 @@ public:
 
     static std::string FunctionCategoryTypeToString(FunctionCategory cat) {
         switch (cat) {
-        case FunctionCategory::AGGREGATE:     return "AGGREGATE";
-        case FunctionCategory::SCALAR:        return "SCALAR";
-        case FunctionCategory::STRING:        return "STRING";
-        case FunctionCategory::DATETIME:      return "DATETIME";
-        case FunctionCategory::MATHEMATICAL:  return "MATHEMATICAL";
-        case FunctionCategory::SYSTEM:        return "SYSTEM";
-        case FunctionCategory::WINDOW:        return "WINDOW";
-        case FunctionCategory::UNKNOWN:       return "UNKNOWN";
-        default:                              return "UNKNOWN";
+        case FunctionCategory::AGGREGATE:    return "AGGREGATE";
+        case FunctionCategory::SCALAR:       return "SCALAR";
+        case FunctionCategory::STRING:       return "STRING";
+        case FunctionCategory::DATETIME:     return "DATETIME";
+        case FunctionCategory::MATHEMATICAL: return "MATHEMATICAL";
+        case FunctionCategory::SYSTEM:       return "SYSTEM";
+        case FunctionCategory::WINDOW:       return "WINDOW";
+        case FunctionCategory::UNKNOWN:      return "UNKNOWN";
+        default:                             return "UNKNOWN";
         }
     }
 
@@ -504,14 +509,17 @@ public:
 
     static std::string ComparisonOpTypeToString(ComparisonOp op) {
         switch (op) {
+            // Basic comparisons
         case ComparisonOp::LESS:                 return "LESS";
         case ComparisonOp::GREATER:              return "GREATER";
         case ComparisonOp::LESS_EQUAL:           return "LESS_EQUAL";
         case ComparisonOp::GREATER_EQUAL:        return "GREATER_EQUAL";
         case ComparisonOp::NOT_EQUAL:            return "NOT_EQUAL";
         case ComparisonOp::EQUAL:                return "EQUAL";
+            // Null-safe equality
         case ComparisonOp::IS_DISTINCT_FROM:     return "IS_DISTINCT_FROM";
         case ComparisonOp::IS_NOT_DISTINCT_FROM: return "IS_NOT_DISTINCT_FROM";
+            // Pattern matching
         case ComparisonOp::LIKE:                 return "LIKE";
         case ComparisonOp::NOT_LIKE:             return "NOT_LIKE";
         case ComparisonOp::ILIKE:                return "ILIKE";
@@ -585,6 +593,7 @@ public:
 
     static std::string DateTimePartTypeToString(DateTimePart part) {
         switch (part) {
+            // Date parts
         case DateTimePart::YEAR:            return "YEAR";
         case DateTimePart::QUARTER:         return "QUARTER";
         case DateTimePart::MONTH:           return "MONTH";
@@ -593,12 +602,14 @@ public:
         case DateTimePart::WEEK:            return "WEEK";
         case DateTimePart::ISO_WEEK:        return "ISO_WEEK";
         case DateTimePart::WEEKDAY:         return "WEEKDAY";
+            // Time parts
         case DateTimePart::HOUR:            return "HOUR";
         case DateTimePart::MINUTE:          return "MINUTE";
         case DateTimePart::SECOND:          return "SECOND";
         case DateTimePart::MILLISECOND:     return "MILLISECOND";
         case DateTimePart::MICROSECOND:     return "MICROSECOND";
         case DateTimePart::NANOSECOND:      return "NANOSECOND";
+            // Zone
         case DateTimePart::TIMEZONE_OFFSET: return "TIMEZONE_OFFSET";
         case DateTimePart::UNKNOWN:         return "UNKNOWN";
         default:                            return "UNKNOWN";
@@ -651,5 +662,210 @@ public:
         case CommentType::UNKNOWN:     return "UNKNOWN";
         default:                       return "UNKNOWN";
         }
+    }
+
+    // ====================== Character Classification ======================
+
+    /**
+     * @brief Check if character is valid in SQL identifiers.
+     * @param c Character to check
+     * @return true if character can be used in identifiers
+     */
+    static bool isIdentifierChar(char c) {
+        return std::isalnum(static_cast<unsigned char>(c)) || c == '_';
+    }
+
+    /**
+     * @brief Check if character can start an SQL identifier.
+     * @param c Character to check
+     * @return true if character can start an identifier
+     */
+    static bool isIdentifierStart(char c) {
+        return std::isalpha(static_cast<unsigned char>(c)) || c == '_' || c == '@';
+    }
+
+    /**
+     * @brief Check if character is a valid operator symbol.
+     * @param c Character to check
+     * @return true if character is an operator symbol
+     */
+    static bool isOperatorChar(char c) {
+        return std::string("=!<>+-*/%^&|~").find(c) != std::string::npos;
+    }
+
+    /**
+     * @brief Check if character is whitespace (including SQL-specific).
+     * @param c Character to check
+     * @return true if character is whitespace
+     */
+    static bool isWhitespace(char c) {
+        return std::isspace(static_cast<unsigned char>(c));
+    }
+
+    // ====================== Operator Precedence ======================
+
+    /**
+     * @brief Get operator precedence for a given operator type.
+     * @param op Operator type
+     * @return Precedence value (higher = binds tighter)
+     */
+    static int getOperatorPrecedence(OperatorCategory op) {
+        switch (op) {
+        case OperatorCategory::ARITHMETIC:  return SQLOperatorPrecedence::MULTIPLICATIVE;
+        case OperatorCategory::BITWISE:     return SQLOperatorPrecedence::BITWISE_AND;
+        case OperatorCategory::COMPARISON:  return SQLOperatorPrecedence::COMPARISON;
+        case OperatorCategory::LOGICAL:     return SQLOperatorPrecedence::AND;
+        case OperatorCategory::ASSIGN:      return SQLOperatorPrecedence::ASSIGNMENT;
+        case OperatorCategory::CONCAT:      return SQLOperatorPrecedence::ADDITIVE;
+        default:                           return SQLOperatorPrecedence::LOWEST;
+        }
+    }
+
+    /**
+     * @brief Check if operator is left associative.
+     * @param op Operator type
+     * @return true if operator is left associative
+     */
+    static bool isLeftAssociative(OperatorCategory op) {
+        switch (op) {
+        case OperatorCategory::ARITHMETIC:  return true;
+        case OperatorCategory::BITWISE:     return true;
+        case OperatorCategory::COMPARISON:  return true;
+        case OperatorCategory::LOGICAL:     return true;
+        case OperatorCategory::CONCAT:      return true;
+        case OperatorCategory::ASSIGN:      return false;
+        default:                           return true;
+        }
+    }
+
+    // ====================== Operator Methods ======================
+
+    /**
+   * @brief Get the string representation of operator symbols for a category.
+   * @param op Operator category to get symbols for
+   * @return String containing all symbols for the category
+   */
+    static std::string getOperatorSymbol(OperatorCategory op) {
+        switch (op) {
+        case OperatorCategory::ARITHMETIC:  return "+-*/";
+        case OperatorCategory::BITWISE:     return "&|^";
+        case OperatorCategory::COMPARISON:  return "<>=!";
+        case OperatorCategory::LOGICAL:     return "AND OR NOT";
+        case OperatorCategory::CONCAT:      return "||";
+        default:                           return "";
+        }
+    }
+
+    /**
+     * @brief Check if operator category represents unary operators.
+     * @param op Operator category to check
+     * @return true if category contains unary operators
+     */
+    static bool isUnaryOperator(OperatorCategory op) {
+        return op == OperatorCategory::ARITHMETIC || op == OperatorCategory::LOGICAL;
+    }
+
+    /**
+     * @brief Check if operator category represents binary operators.
+     * @param op Operator category to check
+     * @return true if category contains binary operators
+     */
+    static bool isBinaryOperator(OperatorCategory op) {
+        return op != OperatorCategory::UNKNOWN && !isUnaryOperator(op);
+    }
+
+    /**
+     * @brief Get the string representation of JSON operator symbols.
+     * @param op JSON operator to get symbol for
+     * @return String containing the operator symbol
+     */
+    static std::string getJsonOperatorSymbol(JsonOp op) {
+        switch (op) {
+        case JsonOp::ARROW:         return "->";     // Path navigation
+        case JsonOp::ARROW2:        return "->>";    // Text extraction
+        case JsonOp::HASH_ARROW:    return "#>";     // Path navigation (array)
+        case JsonOp::HASH_ARROW2:   return "#>>";    // Text extraction (array)
+        case JsonOp::AT:            return "@";      // Array index
+        case JsonOp::QUESTION:      return "?";      // Key existence
+        case JsonOp::QUESTION_PIPE: return "?|";     // Any key exists
+        case JsonOp::QUESTION_AMP:  return "?&";     // All keys exist
+        case JsonOp::HASH_MINUS:    return "#-";     // Delete key
+        default:                    return "";
+        }
+    }
+
+    // ====================== Symbol Lookup ======================
+
+    /**
+     * @brief Get the string representation of a symbol.
+     * @param sym Symbol type
+     * @return Symbol string
+     */
+    static std::string getSymbolString(CommonSymbol sym) {
+        switch (sym) {
+        case CommonSymbol::COMMA:       return ",";
+        case CommonSymbol::SEMICOLON:   return ";";
+        case CommonSymbol::LPAREN:      return "(";
+        case CommonSymbol::RPAREN:      return ")";
+        case CommonSymbol::LBRACE:      return "{";
+        case CommonSymbol::RBRACE:      return "}";
+        case CommonSymbol::LBRACKET:    return "[";
+        case CommonSymbol::RBRACKET:    return "]";
+        case CommonSymbol::DOT:         return ".";
+        case CommonSymbol::COLON:       return ":";
+        case CommonSymbol::PARAM_MARKER: return "?";
+        default:                        return "";
+        }
+    }
+
+    // ====================== Validation Methods ======================
+
+    /**
+     * @brief Check if token type is valid.
+     * @param type Token type to validate
+     * @return true if token type is valid
+     */
+    static bool isValidTokenType(TokenType type) {
+        return type != TokenType::UNKNOWN;
+    }
+
+    /**
+     * @brief Check if keyword category is valid.
+     * @param cat Keyword category to validate
+     * @return true if category is valid
+     */
+    static bool isValidKeywordCategory(KeywordCategory cat) {
+        return cat != KeywordCategory::UNKNOWN;
+    }
+
+    /**
+     * @brief Check if operator category is valid.
+     * @param cat Operator category to validate
+     * @return true if category is valid
+     */
+    static bool isValidOperatorCategory(OperatorCategory cat) {
+        return cat != OperatorCategory::UNKNOWN;
+    }
+
+    // ====================== Error Reporting ======================
+
+    /**
+     * @brief Get error message for invalid token.
+     * @param type Invalid token type
+     * @param pos Position in input
+     * @return Error message string
+     */
+    static std::string getInvalidTokenMessage(TokenType type, size_t pos) {
+        return "Invalid token of type " + tokenTypeToString(type) + " at position " + std::to_string(pos);
+    }
+
+    /**
+     * @brief Get error message for unexpected character.
+     * @param c Unexpected character
+     * @param pos Position in input
+     * @return Error message string
+     */
+    static std::string getUnexpectedCharMessage(char c, size_t pos) {
+        return "Unexpected character '" + std::string(1, c) + "' at position " + std::to_string(pos);
     }
 };

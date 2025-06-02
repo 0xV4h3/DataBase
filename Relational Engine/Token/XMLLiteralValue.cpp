@@ -1,122 +1,193 @@
 /**
  * @file XMLLiteralValue.cpp
  * @brief Implementation of XMLLiteralValue methods.
- * @details
- * Implements construction, string conversion, deep copy, XPath queries, comparison,
- * validation, element and attribute access, and XPath node finding for XMLLiteralValue.
  */
 
-#include "LiteralValue.hpp"
-#include <pugixml.hpp>
-#include <memory>
+#include "XMLLiteralValue.hpp"
+#include "StringLiteralValue.hpp"
 #include <sstream>
+#include <stdexcept>
 
-// --- Constructor ---
-XMLLiteralValue::XMLLiteralValue(const std::string& v) : value(v) {}
+ // === Constructors ===
 
-// --- Return XML as string ---
+XMLLiteralValue::XMLLiteralValue()
+    : value("<?xml version=\"1.0\"?><root/>")
+{
+}
+
+XMLLiteralValue::XMLLiteralValue(const std::string& v)
+    : value(v)
+{
+    validate();
+}
+
+// === Core Interface ===
+
 std::string XMLLiteralValue::toString() const {
     return value;
 }
 
-// --- Deep copy ---
 std::unique_ptr<LiteralValue> XMLLiteralValue::clone() const {
     return std::make_unique<XMLLiteralValue>(value);
 }
 
-// --- Run XPath query, return first result as XML or string ---
-// If node found: XMLLiteralValue (element) or StringLiteralValue (attribute/text)
-// If not found: nullptr
-std::unique_ptr<LiteralValue> XMLLiteralValue::applyXml(const std::string& xpath) const {
+// === Protected Methods ===
+
+std::pair<pugi::xml_document, pugi::xml_parse_result>
+XMLLiteralValue::parseXML() const noexcept {
     pugi::xml_document doc;
-    pugi::xml_parse_result ok = doc.load_string(value.c_str());
-    if (!ok) return nullptr;
+    auto result = doc.load_string(value.c_str());
+    return { std::move(doc), result };
+}
+
+std::string XMLLiteralValue::serializeNode(
+    const pugi::xml_node& node) noexcept
+{
+    std::ostringstream oss;
+    node.print(oss, "", pugi::format_raw);
+    return oss.str();
+}
+
+bool XMLLiteralValue::validateXMLFormat(
+    const pugi::xml_document& doc) noexcept
+{
+    return doc.first_child() != nullptr;
+}
+
+// === Validation ===
+
+bool XMLLiteralValue::isValid() const {
+    auto [doc, result] = parseXML();
+    return result && validateXMLFormat(doc);
+}
+
+void XMLLiteralValue::validate() const {
+    auto [doc, result] = parseXML();
+    if (!result) {
+        throw std::invalid_argument(
+            "Invalid XML format: " + std::string(result.description()));
+    }
+    if (!validateXMLFormat(doc)) {
+        throw std::invalid_argument("XML document has no root element");
+    }
+}
+
+bool XMLLiteralValue::equals(const LiteralValue& other) const {
+    const auto* xmlOther =
+        dynamic_cast<const XMLLiteralValue*>(&other);
+    if (!xmlOther) return false;
+
+    auto [doc1, result1] = parseXML();
+    auto [doc2, result2] = xmlOther->parseXML();
+
+    if (!result1 || !result2) return false;
+
+    return serializeNode(doc1) == serializeNode(doc2);
+}
+
+// === XML Operations ===
+
+std::unique_ptr<LiteralValue> XMLLiteralValue::applyXml(
+    const std::string& xpath) const noexcept
+{
+    auto [doc, result] = parseXML();
+    if (!result) return nullptr;
+
     pugi::xpath_node_set nodes = doc.select_nodes(xpath.c_str());
     if (nodes.empty()) return nullptr;
-    const auto& n = nodes.first();
-    if (n.node()) {
-        std::ostringstream oss;
-        n.node().print(oss, "", pugi::format_raw);
-        return std::unique_ptr<LiteralValue>(new XMLLiteralValue(oss.str()));
+
+    const auto& node = nodes.first();
+    if (node.node()) {
+        return std::make_unique<XMLLiteralValue>(
+            serializeNode(node.node()));
     }
-    if (n.attribute()) {
-        return std::unique_ptr<LiteralValue>(new StringLiteralValue(n.attribute().value()));
+    if (node.attribute()) {
+        return std::make_unique<StringLiteralValue>(
+            node.attribute().value());
     }
     return nullptr;
 }
 
-// --- Compare by canonicalized XML, not text ---
-// Only EQUAL/NOT_EQUAL supported, others return false
-bool XMLLiteralValue::compare(const LiteralValue& rhs, ComparisonOp op) const {
+bool XMLLiteralValue::compare(
+    const LiteralValue& rhs, ComparisonOp op) const
+{
     const auto* r = dynamic_cast<const XMLLiteralValue*>(&rhs);
     if (!r) return false;
-    pugi::xml_document doc_a, doc_b;
-    if (!doc_a.load_string(value.c_str()) || !doc_b.load_string(r->value.c_str())) return false;
-    std::ostringstream ossa, ossb;
-    doc_a.print(ossa, "", pugi::format_raw);
-    doc_b.print(ossb, "", pugi::format_raw);
+
+    auto [doc1, result1] = parseXML();
+    auto [doc2, result2] = r->parseXML();
+
+    if (!result1 || !result2) return false;
+
+    std::string xml1 = serializeNode(doc1);
+    std::string xml2 = serializeNode(doc2);
+
     switch (op) {
-    case ComparisonOp::EQUAL:      return ossa.str() == ossb.str();
-    case ComparisonOp::NOT_EQUAL:  return ossa.str() != ossb.str();
-    default: return false;
+    case ComparisonOp::EQUAL:     return xml1 == xml2;
+    case ComparisonOp::NOT_EQUAL: return xml1 != xml2;
+    default:                      return false;
     }
 }
 
-// --- Check XML validity (parsing and root) ---
-bool XMLLiteralValue::isValid() const {
-    pugi::xml_document doc;
-    return doc.load_string(value.c_str()) && doc.first_child();
-}
+bool XMLLiteralValue::hasElement(
+    const std::string& name) const noexcept
+{
+    auto [doc, result] = parseXML();
+    if (!result) return false;
 
-// --- Check for presence of element (by name, at any depth) ---
-bool XMLLiteralValue::hasElement(const std::string& name) const {
-    pugi::xml_document doc;
-    if (!doc.load_string(value.c_str())) return false;
     std::string xpath = "//" + name;
-    pugi::xpath_node_set nodes = doc.select_nodes(xpath.c_str());
-    return !nodes.empty();
+    return !doc.select_nodes(xpath.c_str()).empty();
 }
 
-// --- Get attribute value from root node (as string literal) ---
-// If not found: nullptr
-std::unique_ptr<LiteralValue> XMLLiteralValue::getAttribute(const std::string& attr) const {
-    pugi::xml_document doc;
-    if (!doc.load_string(value.c_str())) return nullptr;
+// === Access Operations ===
+
+std::unique_ptr<LiteralValue> XMLLiteralValue::getAttribute(
+    const std::string& attr) const noexcept
+{
+    auto [doc, result] = parseXML();
+    if (!result) return nullptr;
+
     pugi::xml_node root = doc.first_child();
     if (!root) return nullptr;
-    pugi::xml_attribute a = root.attribute(attr.c_str());
-    if (!a) return nullptr;
-    return std::unique_ptr<LiteralValue>(new StringLiteralValue(a.value()));
+
+    pugi::xml_attribute attribute = root.attribute(attr.c_str());
+    if (!attribute) return nullptr;
+
+    return std::make_unique<StringLiteralValue>(attribute.value());
 }
 
-// --- Get text content of root element (as string literal) ---
-// If not found: nullptr
-std::unique_ptr<LiteralValue> XMLLiteralValue::getText() const {
-    pugi::xml_document doc;
-    if (!doc.load_string(value.c_str())) return nullptr;
+std::unique_ptr<LiteralValue> XMLLiteralValue::getText() const noexcept {
+    auto [doc, result] = parseXML();
+    if (!result) return nullptr;
+
     pugi::xml_node root = doc.first_child();
     if (!root) return nullptr;
+
     const char* text = root.text().get();
     if (!text) return nullptr;
-    return std::unique_ptr<LiteralValue>(new StringLiteralValue(text));
+
+    return std::make_unique<StringLiteralValue>(text);
 }
 
-// --- Find nodes by XPath, return as XMLLiteralValue or StringLiteralValue vector ---
-// If attribute/text node: StringLiteralValue, else XMLLiteralValue
-std::vector<std::unique_ptr<LiteralValue>> XMLLiteralValue::findByXPath(const std::string& xpath) const {
-    std::vector<std::unique_ptr<LiteralValue>> out;
-    pugi::xml_document doc;
-    if (!doc.load_string(value.c_str())) return out;
+std::vector<std::unique_ptr<LiteralValue>> XMLLiteralValue::findByXPath(
+    const std::string& xpath) const noexcept
+{
+    std::vector<std::unique_ptr<LiteralValue>> results;
+
+    auto [doc, result] = parseXML();
+    if (!result) return results;
+
     pugi::xpath_node_set nodes = doc.select_nodes(xpath.c_str());
-    for (auto& n : nodes) {
-        if (n.node()) {
-            std::ostringstream oss;
-            n.node().print(oss, "", pugi::format_raw);
-            out.emplace_back(new XMLLiteralValue(oss.str()));
+    for (const auto& node : nodes) {
+        if (node.node()) {
+            results.push_back(std::make_unique<XMLLiteralValue>(
+                serializeNode(node.node())));
         }
-        else if (n.attribute()) {
-            out.emplace_back(new StringLiteralValue(n.attribute().value()));
+        else if (node.attribute()) {
+            results.push_back(std::make_unique<StringLiteralValue>(
+                node.attribute().value()));
         }
     }
-    return out;
+
+    return results;
 }

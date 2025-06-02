@@ -129,21 +129,38 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ArrayLiteralValue.hpp" />
+    <ClInclude Include="BinaryLiteralValue.hpp" />
+    <ClInclude Include="BooleanLiteralValue.hpp" />
+    <ClInclude Include="CharLiteralValue.hpp" />
+    <ClInclude Include="DateLiteralValue.hpp" />
+    <ClInclude Include="DateTimeLiteralValue.hpp" />
+    <ClInclude Include="EscapeStringLiteralValue.hpp" />
     <ClInclude Include="external\nlohmann\json\json.hpp" />
     <ClInclude Include="external\nlohmann\json\json_fwd.hpp" />
     <ClInclude Include="external\pugixml\pugiconfig.hpp" />
     <ClInclude Include="external\pugixml\pugixml.hpp" />
     <ClInclude Include="external\stduuid\uuid.h" />
+    <ClInclude Include="FloatLiteralValue.hpp" />
     <ClInclude Include="FunctionInfo.hpp" />
+    <ClInclude Include="HexLiteralValue.hpp" />
     <ClInclude Include="IdentifierInfo.hpp" />
+    <ClInclude Include="IntegerLiteralValue.hpp" />
+    <ClInclude Include="IntervalLiteralValue.hpp" />
+    <ClInclude Include="JSONLiteralValue.hpp" />
     <ClInclude Include="KeywordInfo.hpp" />
     <ClInclude Include="LexerUtils.hpp" />
     <ClInclude Include="LiteralValue.hpp" />
+    <ClInclude Include="NullLiteralValue.hpp" />
     <ClInclude Include="OperatorInfo.hpp" />
     <ClInclude Include="PunctuatorInfo.hpp" />
+    <ClInclude Include="StringLiteralValue.hpp" />
+    <ClInclude Include="TimeLiteralValue.hpp" />
     <ClInclude Include="Token.hpp" />
     <ClInclude Include="TokenEnums.hpp" />
     <ClInclude Include="TokenUtils.hpp" />
+    <ClInclude Include="UUIDLiteralValue.hpp" />
+    <ClInclude Include="XMLLiteralValue.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ArrayLiteralValue.cpp" />
@@ -155,12 +172,14 @@
     <ClCompile Include="EscapeStringLiteralValue.cpp" />
     <ClCompile Include="external\pugixml\pugixml.cpp" />
     <ClCompile Include="FloatLiteralValue.cpp" />
+    <ClCompile Include="HexLiteralValue.cpp" />
     <ClCompile Include="IntegerLiteralValue.cpp" />
+    <ClCompile Include="IntervalLiteralValue.cpp" />
     <ClCompile Include="JSONLiteralValue.cpp" />
-    <ClCompile Include="LiteralValue.cpp" />
     <ClCompile Include="NullLiteralValue.cpp" />
     <ClCompile Include="StringLiteralValue.cpp" />
     <ClCompile Include="TimeLiteralValue.cpp" />
+    <ClCompile Include="TokenUtils.cpp" />
     <ClCompile Include="UUIDLiteralValue.cpp" />
     <ClCompile Include="XMLLiteralValue.cpp" />
   </ItemGroup>
