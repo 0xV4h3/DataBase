@@ -179,6 +179,7 @@
     <ClCompile Include="NullLiteralValue.cpp" />
     <ClCompile Include="StringLiteralValue.cpp" />
     <ClCompile Include="TimeLiteralValue.cpp" />
+    <ClCompile Include="Token.cpp" />
     <ClCompile Include="TokenUtils.cpp" />
     <ClCompile Include="UUIDLiteralValue.cpp" />
     <ClCompile Include="XMLLiteralValue.cpp" />

@@ -1,16 +1,15 @@
-/**
- * @file IntervalLiteralValue.hpp
- * @brief Definition of IntervalLiteralValue class.
- * @details
- * Represents an interval literal value for SQL operations.
- * Supports common interval units: YEAR, MONTH, DAY, HOUR, MINUTE, SECOND
- */
 #pragma once
 #include "LiteralValue.hpp"
 #include <string>
 #include <map>
 #include <cstdint>
+#include <stdexcept>
+#include <algorithm>
+#include <regex>
 
+/**
+ * @brief SQL INTERVAL literal supporting standard and PostgreSQL-style intervals.
+ */
 class IntervalLiteralValue : public LiteralValue {
 public:
     /**
@@ -23,7 +22,10 @@ public:
         DAY,
         HOUR,
         MINUTE,
-        SECOND
+        SECOND,
+        MILLISECOND,
+        MICROSECOND,
+        UNKNOWN
     };
 
     using UnitMap = std::map<Unit, int64_t>;
@@ -31,17 +33,19 @@ public:
     // === Constructors and Destructor ===
 
     /**
-     * @brief Constructs an IntervalLiteralValue.
-     * @param value The interval value string
-     * @param fromUnit Starting unit
-     * @param toUnit Ending unit (optional)
+     * @brief Constructs an IntervalLiteralValue (standard interval: INTERVAL 'val' UNIT [TO UNIT])
      */
     IntervalLiteralValue(const std::string& value,
         Unit fromUnit,
-        Unit toUnit = Unit::SECOND);
+        Unit toUnit = Unit::UNKNOWN);
 
     /**
-     * @brief Default constructor (zero interval).
+     * @brief Constructs a PostgreSQL-style IntervalLiteralValue (INTERVAL '2 years 3 months')
+     */
+    IntervalLiteralValue(const std::string& pgStyleValue);
+
+    /**
+     * @brief Default constructor (zero interval, unknown type).
      */
     IntervalLiteralValue();
 
@@ -70,36 +74,27 @@ public:
     const std::string& getValue() const { return value; }
     Unit getFromUnit() const { return fromUnit; }
     Unit getToUnit() const { return toUnit; }
+    bool isPostgresStyle() const { return postgresStyle; }
+    const UnitMap& getComponents() const { return components; }
 
-private:
-    std::string value;  ///< The interval value string
-    Unit fromUnit;      ///< Starting unit
-    Unit toUnit;        ///< Ending unit
-
-protected:
-    /**
-     * @brief Parses an interval string into components.
-     * @throws std::invalid_argument if format is invalid
-     */
-    UnitMap parseInterval(const std::string& intervalStr) const;
-
-    /**
-     * @brief Converts interval components to normalized seconds.
-     */
-    int64_t toSeconds(const UnitMap& components) const;
-
-    /**
-     * @brief Converts seconds to interval components.
-     */
-    UnitMap fromSeconds(int64_t seconds) const;
-
-    /**
-     * @brief Converts unit to string.
-     */
+    // === Unit Conversion/Parsing ===
+    static Unit unitFromString(const std::string& unitStr);
     static std::string unitToString(Unit unit);
 
-    /**
-     * @brief Validates interval range.
-     */
+private:
+    std::string value;      ///< The original interval value string
+    Unit fromUnit;          ///< Starting unit (standard interval) or UNKNOWN (pg-style)
+    Unit toUnit;            ///< Ending unit (standard interval) or UNKNOWN (pg-style)
+    bool postgresStyle;     ///< True if this is a PostgreSQL-style interval
+    UnitMap components;     ///< Parsed components (years, months, etc.)
+
+    // Parsing helpers
+    void parseStandard();
+    void parsePostgresStyle();
+
+    // Component helpers
+    static UnitMap parsePGStyleString(const std::string& str);
     static bool validateRange(const UnitMap& components);
+    int64_t toSeconds(const UnitMap& components) const;
+    UnitMap fromSeconds(int64_t seconds) const;
 };

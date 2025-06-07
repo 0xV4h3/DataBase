@@ -95,7 +95,7 @@ std::string TokenUtils::getIdentifierClassName(
     const IdentifierToken& token) noexcept
 {
     if (token.infoPtr) {
-        return LexerUtils::identifierTypeToString(token.infoPtr->category);
+        return LexerUtils::identifierCategoryToString(token.infoPtr->category);
     }
     return "UNKNOWN";
 }

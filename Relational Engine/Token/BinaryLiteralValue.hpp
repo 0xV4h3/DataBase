@@ -28,6 +28,13 @@ public:
     explicit BinaryLiteralValue(const std::vector<uint8_t>& v);
 
     /**
+     * @brief Constructs a BinaryLiteralValue from a string of bits.
+     * @param bitString The binary value as a string of '0' and '1' characters
+     * @throws std::invalid_argument if the string contains non-binary characters
+     */
+    explicit BinaryLiteralValue(const std::string& bitString);
+    
+    /**
      * @brief Default constructor (empty binary).
      */
     BinaryLiteralValue() : value() {}
@@ -74,6 +81,14 @@ public:
      * @return Result of comparison
      */
     bool compare(const LiteralValue& rhs, ComparisonOp op) const override;
+
+    /**
+     * @brief Converts a string of bits to a vector of bytes.
+     * @param bitString The binary value as a string of '0' and '1' characters
+     * @return Vector of bytes representing the binary value
+     * @throws std::invalid_argument if the string contains non-binary characters
+     */
+    static std::vector<uint8_t> bitsToBytes(const std::string& bitString);
 
 public:
     std::vector<uint8_t> value; ///< The binary value

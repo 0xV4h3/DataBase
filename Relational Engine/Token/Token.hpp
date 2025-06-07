@@ -241,6 +241,18 @@ public:
     }
 
     /**
+     * @brief Constructs a KeywordToken with the given KeywordInfo and lexeme.
+     * @param info Shared pointer to KeywordInfo
+     * @param lexeme The keyword text as it appears in the source
+     * @throws std::invalid_argument if info is null
+     */
+    KeywordToken(std::shared_ptr<KeywordInfo> info, std::string lexeme)
+        : Token(TT::KEYWORD, std::move(lexeme)), infoPtr(std::move(info))
+    {
+        validate();
+    }
+
+    /**
      * @brief Constructs an empty KeywordToken (invalid/unknown).
      */
     KeywordToken()
@@ -380,6 +392,18 @@ public:
      */
     explicit FunctionToken(std::shared_ptr<FunctionInfo> info)
         : Token(TT::FUNCTION, info ? info->name : ""), infoPtr(std::move(info))
+    {
+        validate();
+    }
+
+    /**
+     * @brief Constructs a FunctionToken with the given FunctionInfo and name.
+     * @param info Shared pointer to FunctionInfo
+     * @param name The function name as it appears in the source
+     * @throws std::invalid_argument if info is null
+     */
+    FunctionToken(std::shared_ptr<FunctionInfo> info, std::string name)
+        : Token(TT::FUNCTION, std::move(name)), infoPtr(std::move(info))
     {
         validate();
     }
@@ -689,6 +713,36 @@ public:
         return oss.str();
     }
 
+    /**
+     * @brief Replace or augment the IdentifierInfo pointer.
+     * @param info New IdentifierInfo shared pointer
+     */
+    void setInfo(std::shared_ptr<IdentifierInfo> info) {
+        infoPtr = std::move(info);
+    }
+
+    /**
+     * @brief Update token category (delegates to infoPtr->setCategory).
+     * @param cat New IdentifierCategory
+     */
+    void updateCategory(IdentifierCategory cat) {
+        if (!infoPtr) {
+            infoPtr = std::make_shared<IdentifierInfo>();
+        }
+        infoPtr->setCategory(cat);
+    }
+
+    /**
+     * @brief Qualify identifier with schema and database.
+     * @param schema Schema name
+     * @param database Database name (optional)
+     */
+    void qualify(const std::string& schema, const std::string& database = "") {
+        if (!infoPtr) infoPtr = std::make_shared<IdentifierInfo>();
+        infoPtr->schema = schema;
+        if (!database.empty()) infoPtr->database = database;
+    }
+
 public:
     std::shared_ptr<IdentifierInfo> infoPtr; ///< Pointer to identifier metadata
 
@@ -708,9 +762,6 @@ protected:
 private:
     static const std::string empty_string_; ///< Empty string constant for getSchema
 };
-
-// Define the static member
-const std::string IdentifierToken::empty_string_;
 
 /**
  * @class LiteralToken
@@ -909,6 +960,139 @@ protected:
 };
 
 /**
+ * @class LiteralCategoryToken
+ * @brief Token representing a literal with specific category (e.g., INTEGER, STRING, JSON).
+ * @details
+ * Used for tokens that carry a LiteralCategory value. Provides validation,
+ * comparison, and category-specific logic.
+ *
+ * @see Token
+ * @see LiteralCategory
+ */
+class LiteralCategoryToken : public Token {
+public:
+    // === Constructors ===
+
+    /**
+     * @brief Constructs a LiteralCategoryToken.
+     * @param c The literal category enum
+     * @param v The string lexeme
+     * @param p The position in source
+     * @throws std::invalid_argument if category is UNKNOWN or value empty
+     */
+    LiteralCategoryToken(LiteralCategory c, std::string v, int p)
+        : Token(TT::LITERAL_CATEGORY, std::move(v), p), category(c)
+    {
+        validate();
+    }
+
+    /**
+     * @brief Constructs a LiteralCategoryToken without position.
+     * @param c The literal category enum
+     * @param v The string lexeme
+     * @throws std::invalid_argument if category is UNKNOWN or value empty
+     */
+    LiteralCategoryToken(LiteralCategory c, std::string v)
+        : Token(TT::LITERAL_CATEGORY, std::move(v)), category(c)
+    {
+        validate();
+    }
+
+    /**
+     * @brief Default constructor for an invalid/unknown literal.
+     */
+    LiteralCategoryToken()
+        : Token(TT::LITERAL_CATEGORY, "", -1), category(LiteralCategory::UNKNOWN)
+    {
+    }
+
+    // === Accessors ===
+
+    /**
+     * @brief Gets the literal category.
+     * @return LiteralCategory enum value
+     */
+    LiteralCategory getCategory() const {
+        return category;
+    }
+
+    /**
+     * @brief Gets the literal lexeme.
+     * @return String representation of the literal
+     */
+    const std::string& getLexeme() const {
+        return getValue();
+    }
+
+    // === Validation ===
+
+    /**
+     * @brief Checks if token is valid.
+     * @return true if category != UNKNOWN and value non-empty
+     */
+    bool isValid() const override {
+        return Token::isValid() && category != LiteralCategory::UNKNOWN;
+    }
+
+    /**
+     * @brief Validates token's internal state.
+     * @throws std::invalid_argument if invalid
+     */
+    void validate() const override {
+        Token::validate();
+        if (category == LiteralCategory::UNKNOWN) {
+            throw std::invalid_argument("LiteralCategoryToken has unknown category");
+        }
+        if (getValue().empty()) {
+            throw std::invalid_argument("LiteralCategoryToken value cannot be empty");
+        }
+    }
+
+    // === Comparison ===
+
+    /**
+     * @brief Compares literal tokens for equality.
+     * @param other Token to compare with
+     * @return true if both category and lexeme match
+     */
+    bool equals(const Token& other) const override {
+        if (!Token::equals(other)) return false;
+        auto* lit = dynamic_cast<const LiteralCategoryToken*>(&other);
+        return lit && category == lit->category;
+    }
+
+    // === Cloning ===
+
+    /**
+     * @brief Creates a deep copy of the token.
+     * @return Unique pointer to new LiteralCategoryToken
+     */
+    std::unique_ptr<Token> clone() const override {
+        if (!isValid()) return std::make_unique<LiteralCategoryToken>();
+        auto token = std::make_unique<LiteralCategoryToken>(category, getValue());
+        token->setPosition(getPosition());
+        return token;
+    }
+
+    // === String Representation ===
+
+    /**
+     * @brief Gets string representation of literal token.
+     * @return Formatted string with token details
+     */
+    std::string toString() const override {
+        std::ostringstream oss;
+        oss << "LiteralCategoryToken{category=" << static_cast<int>(category)
+            << ", value='" << getValue() << "'"
+            << ", pos=" << getPosition() << "}";
+        return oss.str();
+    }
+
+protected:
+    LiteralCategory category;  ///< The specific literal category
+};
+
+/**
  * @class OperatorToken
  * @brief Token representing a SQL operator.
  * @details
@@ -929,6 +1113,18 @@ public:
      */
     explicit OperatorToken(std::shared_ptr<OperatorInfo> info)
         : Token(TT::OPERATOR, info ? info->symbol : ""), infoPtr(std::move(info))
+    {
+        validate();
+    }
+
+    /**
+     * @brief Constructs an OperatorToken with the given OperatorInfo and symbol.
+     * @param info Shared pointer to OperatorInfo
+     * @param symbol The operator symbol as it appears in the source
+     * @throws std::invalid_argument if info is null
+     */
+    OperatorToken(std::shared_ptr<OperatorInfo> info, std::string symbol)
+        : Token(TT::OPERATOR, std::move(symbol)), infoPtr(std::move(info))
     {
         validate();
     }

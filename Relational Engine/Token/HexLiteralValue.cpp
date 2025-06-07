@@ -8,8 +8,8 @@
 
 #include "HexLiteralValue.hpp"
 #include <sstream>
-#include <iomanip>
 #include <stdexcept>
+#include <format>
 
  // === Constructors ===
 
@@ -22,10 +22,19 @@ HexLiteralValue::HexLiteralValue(const std::string& hexStr) {
 // === Core Interface ===
 
 std::string HexLiteralValue::toString() const {
-    std::ostringstream oss;
-    oss << "0x" << std::hex << std::uppercase
-        << std::setw(16) << std::setfill('0') << value;
-    return oss.str();
+    // 1. Produce uppercase hex with “0x” prefix
+    auto hexStr = std::format("{:#X}", value);  // e.g. “0xDEADBEEF” or “0x5”
+
+    // 2. Extract only the digits (skip “0x”)
+    auto digits = hexStr.substr(2);
+
+    // 3. If odd number of digits, pad one zero after the prefix
+    if (digits.size() % 2 != 0) {
+        // Re-format with one extra leading zero
+        return std::format("0x0{:X}", value);
+    }
+
+    return hexStr;
 }
 
 std::unique_ptr<LiteralValue> HexLiteralValue::clone() const {

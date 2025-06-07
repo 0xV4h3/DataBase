@@ -26,6 +26,14 @@ public:
     std::string toString() const override;
     std::unique_ptr<LiteralValue> clone() const override;
 
+    /**
+     * @brief Creates string representation of array.
+     * @param elements Array elements to stringify
+     * @return Formatted string representation
+     */
+    static std::string elementsToString(
+        const std::vector<std::shared_ptr<LiteralValue>>& elements) noexcept;
+
     // === Validation ===
     bool isValid() const override;
     void validate() const override;
@@ -70,12 +78,4 @@ protected:
      * @return true if all elements are valid
      */
     bool validateElements() const noexcept;
-
-    /**
-     * @brief Creates string representation of array.
-     * @param elements Array elements to stringify
-     * @return Formatted string representation
-     */
-    static std::string elementsToString(
-        const std::vector<std::shared_ptr<LiteralValue>>& elements) noexcept;
 };

@@ -13,10 +13,109 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Token">
+      <UniqueIdentifier>{edab7ad3-4d95-4077-a616-866f84e4ea5e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Lexer.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\external\nlohmann\json\json.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\external\nlohmann\json\json_fwd.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\external\pugixml\pugiconfig.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\external\pugixml\pugixml.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\external\stduuid\uuid.h">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\ArrayLiteralValue.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\BinaryLiteralValue.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\BooleanLiteralValue.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\CharLiteralValue.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\DateLiteralValue.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\DateTimeLiteralValue.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\EscapeStringLiteralValue.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\FloatLiteralValue.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\FunctionInfo.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\HexLiteralValue.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\IdentifierInfo.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\IntegerLiteralValue.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\IntervalLiteralValue.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\JSONLiteralValue.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\KeywordInfo.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\LexerUtils.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\LiteralValue.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\NullLiteralValue.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\OperatorInfo.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\PunctuatorInfo.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\StringLiteralValue.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\TimeLiteralValue.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\Token.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\TokenEnums.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\TokenUtils.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\UUIDLiteralValue.hpp">
+      <Filter>Token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Token\XMLLiteralValue.hpp">
+      <Filter>Token</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -25,6 +124,66 @@
     </ClCompile>
     <ClCompile Include="Lexer.cpp">
       <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Token\external\pugixml\pugixml.cpp">
+      <Filter>Token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Token\ArrayLiteralValue.cpp">
+      <Filter>Token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Token\BinaryLiteralValue.cpp">
+      <Filter>Token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Token\BooleanLiteralValue.cpp">
+      <Filter>Token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Token\CharLiteralValue.cpp">
+      <Filter>Token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Token\DateLiteralValue.cpp">
+      <Filter>Token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Token\DateTimeLiteralValue.cpp">
+      <Filter>Token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Token\EscapeStringLiteralValue.cpp">
+      <Filter>Token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Token\FloatLiteralValue.cpp">
+      <Filter>Token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Token\HexLiteralValue.cpp">
+      <Filter>Token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Token\IntegerLiteralValue.cpp">
+      <Filter>Token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Token\IntervalLiteralValue.cpp">
+      <Filter>Token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Token\JSONLiteralValue.cpp">
+      <Filter>Token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Token\NullLiteralValue.cpp">
+      <Filter>Token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Token\StringLiteralValue.cpp">
+      <Filter>Token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Token\TimeLiteralValue.cpp">
+      <Filter>Token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Token\TokenUtils.cpp">
+      <Filter>Token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Token\UUIDLiteralValue.cpp">
+      <Filter>Token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Token\XMLLiteralValue.cpp">
+      <Filter>Token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Token\Token.cpp">
+      <Filter>Token</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -14,8 +14,9 @@
 namespace SQLOperatorPrecedence {
     constexpr int HIGHEST = 100;       // Parentheses, brackets
     constexpr int MEMBER = 90;         // . and -> operators
+    constexpr int TYPECAST = 85;       // ::
     constexpr int UNARY = 80;          // NOT, !, -, +, ~
-    constexpr int MULTIPLICATIVE = 70;  // *, /, %
+    constexpr int MULTIPLICATIVE = 70; // *, /, %
     constexpr int ADDITIVE = 60;       // +, -
     constexpr int SHIFT = 55;          // <<, >>
     constexpr int BITWISE_AND = 50;    // &
@@ -40,15 +41,16 @@ namespace SQLOperatorPrecedence {
  */
 enum class TokenType {
     UNKNOWN = 0,
-    KEYWORD,        // SQL keywords (SELECT, INSERT, etc)
-    FUNCTION,       // Built-in functions (COUNT, MAX, etc)
-    IDENTIFIER,     // Names (tables, columns, aliases)
-    LITERAL,        // Constants (numbers, strings, etc)
-    OPERATOR,       // Operations (+, -, *, /, etc)
-    PUNCTUATOR,     // Syntax elements (,;(){}[], etc)
-    DATETIMEPART,   // Date/time components (YEAR, MONTH, etc)
-    COMMENT,        // SQL comments
-    END_OF_FILE     // End of input marker
+    KEYWORD,         // SQL keywords (SELECT, INSERT, etc)
+    FUNCTION,        // Built-in functions (COUNT, MAX, etc)
+    IDENTIFIER,      // Names (tables, columns, aliases)
+    LITERAL,         // Constants (numbers, strings, etc)
+    LITERAL_CATEGORY,//  Literal category (INTEGER, JSON, XML…)
+    OPERATOR,        // Operations (+, -, *, /, etc)
+    PUNCTUATOR,      // Syntax elements (,;(){}[], etc)
+    DATETIMEPART,    // Date/time components (YEAR, MONTH, etc)
+    COMMENT,         // SQL comments
+    END_OF_FILE      // End of input marker
 };
 
 // ---------------- SQL Statement Keywords ----------------
@@ -211,8 +213,6 @@ enum class MiscKeyword {
     UNKNOWN = 0,
     // Flow control
     CASE, WHEN, THEN, ELSE, END,
-    // Type conversion
-    CAST, CONVERT,
     // Sort direction
     ASC, DESC,
     // Column attributes
@@ -417,7 +417,7 @@ enum class OperatorCategory {
     JSON,        // JSON operations
     REGEX,       // Pattern matching
     ARRAY,       // Array operations
-    TYPECAST     // Type conversion
+    TYPECAST     // Type conversion (::)
 };
 
 // ---------------- Operators ----------------
@@ -523,6 +523,11 @@ enum class RegexOp {
     NOT_TILDE_STAR   // !~*
 };
 
+enum class TypecastOp {
+    UNKNOWN = 0,
+    TYPECAST         // ::
+};
+
 // ---------------- Identifiers ----------------
 
 /**
@@ -614,7 +619,6 @@ enum class TSQLSymbol {
     UNKNOWN = 0,
     DOT,           // .
     COLON,         // :
-    DOUBLE_COLON   // ::
 };
 
 /**

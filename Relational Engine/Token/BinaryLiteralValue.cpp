@@ -19,11 +19,17 @@ BinaryLiteralValue::BinaryLiteralValue(const std::vector<uint8_t>& v)
     validate();
 }
 
+BinaryLiteralValue::BinaryLiteralValue(const std::string& bitString)
+    : value(bitsToBytes(bitString))
+{
+    validate();
+}
+
 // === Core Interface ===
 
 std::string BinaryLiteralValue::byteToHex(uint8_t byte) {
     std::ostringstream oss;
-    oss << std::hex << std::setw(2) << std::setfill('0')
+    oss << std::hex << std::uppercase << std::setw(2) << std::setfill('0')
         << static_cast<int>(byte);
     return oss.str();
 }
@@ -77,4 +83,27 @@ bool BinaryLiteralValue::compare(const LiteralValue& rhs, ComparisonOp op) const
     case ComparisonOp::GREATER_EQUAL: return value >= r->value;
     default:                          return false;
     }
+}
+
+std::vector<uint8_t> BinaryLiteralValue::bitsToBytes(const std::string& bitString) {
+    std::vector<uint8_t> bytes;
+    size_t len = bitString.size();
+    for (size_t i = 0; i < len; i += 8) {
+        uint8_t byte = 0;
+        int chunkSize = std::min(static_cast<size_t>(8), len - i);
+        for (int j = 0; j < chunkSize; ++j) {
+            if (bitString[i + j] == '1') {
+                byte |= (1 << (7 - j));
+            }
+            else if (bitString[i + j] != '0') {
+                throw std::invalid_argument("Invalid character in binary literal: " + std::string(1, bitString[i + j]));
+            }
+        }
+        // If the last chunk is less than 8 bits, right-align the bits (shift right)
+        if (chunkSize < 8) {
+            byte >>= (8 - chunkSize);
+        }
+        bytes.push_back(byte);
+    }
+    return bytes;
 }

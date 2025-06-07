@@ -129,6 +129,38 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\Token\ArrayLiteralValue.hpp" />
+    <ClInclude Include="..\Token\BinaryLiteralValue.hpp" />
+    <ClInclude Include="..\Token\BooleanLiteralValue.hpp" />
+    <ClInclude Include="..\Token\CharLiteralValue.hpp" />
+    <ClInclude Include="..\Token\DateLiteralValue.hpp" />
+    <ClInclude Include="..\Token\DateTimeLiteralValue.hpp" />
+    <ClInclude Include="..\Token\EscapeStringLiteralValue.hpp" />
+    <ClInclude Include="..\Token\external\nlohmann\json\json.hpp" />
+    <ClInclude Include="..\Token\external\nlohmann\json\json_fwd.hpp" />
+    <ClInclude Include="..\Token\external\pugixml\pugiconfig.hpp" />
+    <ClInclude Include="..\Token\external\pugixml\pugixml.hpp" />
+    <ClInclude Include="..\Token\external\stduuid\uuid.h" />
+    <ClInclude Include="..\Token\FloatLiteralValue.hpp" />
+    <ClInclude Include="..\Token\FunctionInfo.hpp" />
+    <ClInclude Include="..\Token\HexLiteralValue.hpp" />
+    <ClInclude Include="..\Token\IdentifierInfo.hpp" />
+    <ClInclude Include="..\Token\IntegerLiteralValue.hpp" />
+    <ClInclude Include="..\Token\IntervalLiteralValue.hpp" />
+    <ClInclude Include="..\Token\JSONLiteralValue.hpp" />
+    <ClInclude Include="..\Token\KeywordInfo.hpp" />
+    <ClInclude Include="..\Token\LexerUtils.hpp" />
+    <ClInclude Include="..\Token\LiteralValue.hpp" />
+    <ClInclude Include="..\Token\NullLiteralValue.hpp" />
+    <ClInclude Include="..\Token\OperatorInfo.hpp" />
+    <ClInclude Include="..\Token\PunctuatorInfo.hpp" />
+    <ClInclude Include="..\Token\StringLiteralValue.hpp" />
+    <ClInclude Include="..\Token\TimeLiteralValue.hpp" />
+    <ClInclude Include="..\Token\Token.hpp" />
+    <ClInclude Include="..\Token\TokenEnums.hpp" />
+    <ClInclude Include="..\Token\TokenUtils.hpp" />
+    <ClInclude Include="..\Token\UUIDLiteralValue.hpp" />
+    <ClInclude Include="..\Token\XMLLiteralValue.hpp" />
     <ClInclude Include="AST.hpp" />
     <ClInclude Include="ASTNodes.hpp" />
     <ClInclude Include="ASTVisitor.hpp" />
@@ -136,6 +168,26 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Lexer\Lexer.cpp" />
+    <ClCompile Include="..\Token\ArrayLiteralValue.cpp" />
+    <ClCompile Include="..\Token\BinaryLiteralValue.cpp" />
+    <ClCompile Include="..\Token\BooleanLiteralValue.cpp" />
+    <ClCompile Include="..\Token\CharLiteralValue.cpp" />
+    <ClCompile Include="..\Token\DateLiteralValue.cpp" />
+    <ClCompile Include="..\Token\DateTimeLiteralValue.cpp" />
+    <ClCompile Include="..\Token\EscapeStringLiteralValue.cpp" />
+    <ClCompile Include="..\Token\external\pugixml\pugixml.cpp" />
+    <ClCompile Include="..\Token\FloatLiteralValue.cpp" />
+    <ClCompile Include="..\Token\HexLiteralValue.cpp" />
+    <ClCompile Include="..\Token\IntegerLiteralValue.cpp" />
+    <ClCompile Include="..\Token\IntervalLiteralValue.cpp" />
+    <ClCompile Include="..\Token\JSONLiteralValue.cpp" />
+    <ClCompile Include="..\Token\NullLiteralValue.cpp" />
+    <ClCompile Include="..\Token\StringLiteralValue.cpp" />
+    <ClCompile Include="..\Token\TimeLiteralValue.cpp" />
+    <ClCompile Include="..\Token\Token.cpp" />
+    <ClCompile Include="..\Token\TokenUtils.cpp" />
+    <ClCompile Include="..\Token\UUIDLiteralValue.cpp" />
+    <ClCompile Include="..\Token\XMLLiteralValue.cpp" />
     <ClCompile Include="AST.cpp" />
     <ClCompile Include="ASTNodes.cpp" />
     <ClCompile Include="Parser.cpp" />

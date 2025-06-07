@@ -24,17 +24,18 @@ public:
      */
     static std::string tokenTypeToString(TokenType type) {
         switch (type) {
-        case TokenType::KEYWORD:      return "KEYWORD";
-        case TokenType::FUNCTION:     return "FUNCTION";
-        case TokenType::IDENTIFIER:   return "IDENTIFIER";
-        case TokenType::LITERAL:      return "LITERAL";
-        case TokenType::OPERATOR:     return "OPERATOR";
-        case TokenType::PUNCTUATOR:   return "PUNCTUATOR";
-        case TokenType::DATETIMEPART: return "DATETIMEPART";
-        case TokenType::COMMENT:      return "COMMENT";
-        case TokenType::END_OF_FILE:  return "END_OF_FILE";
-        case TokenType::UNKNOWN:      return "UNKNOWN";
-        default:                      return "UNKNOWN";
+        case TokenType::KEYWORD:               return "KEYWORD";
+        case TokenType::FUNCTION:              return "FUNCTION";
+        case TokenType::IDENTIFIER:            return "IDENTIFIER";
+        case TokenType::LITERAL:               return "LITERAL";
+        case TokenType::LITERAL_CATEGORY:      return "LITERAL_CATEGORY";
+        case TokenType::OPERATOR:              return "OPERATOR";
+        case TokenType::PUNCTUATOR:            return "PUNCTUATOR";
+        case TokenType::DATETIMEPART:          return "DATETIMEPART";
+        case TokenType::COMMENT:               return "COMMENT";
+        case TokenType::END_OF_FILE:           return "END_OF_FILE";
+        case TokenType::UNKNOWN:               return "UNKNOWN";
+        default:                               return "UNKNOWN";
         }
     }
 
@@ -73,7 +74,7 @@ public:
         }
     }
 
-    static std::string literalTypeToString(LiteralCategory type) {
+    static std::string literalCategoryToString(LiteralCategory type) {
         switch (type) {
         case LiteralCategory::STRING:         return "STRING";
         case LiteralCategory::ESCAPE_STRING:  return "ESCAPE_STRING";
@@ -97,7 +98,7 @@ public:
         }
     }
 
-    static std::string identifierTypeToString(IdentifierCategory type) {
+    static std::string identifierCategoryToString(IdentifierCategory type) {
         switch (type) {
         case IdentifierCategory::TABLE:             return "TABLE";
         case IdentifierCategory::VIEW:              return "VIEW";
@@ -309,8 +310,6 @@ public:
         case MiscKeyword::THEN:         return "THEN";
         case MiscKeyword::ELSE:         return "ELSE";
         case MiscKeyword::END:          return "END";
-        case MiscKeyword::CAST:         return "CAST";
-        case MiscKeyword::CONVERT:      return "CONVERT";
         case MiscKeyword::ASC:          return "ASC";
         case MiscKeyword::DESC:         return "DESC";
         case MiscKeyword::GENERATED:    return "GENERATED";
@@ -591,6 +590,14 @@ public:
         }
     }
 
+    static std::string TypecastOpTypeToString(TypecastOp op) {
+        switch (op) {
+        case TypecastOp::TYPECAST:  return "TYPECAST";
+        case TypecastOp::UNKNOWN:   return "UNKNOWN";
+        default:                    return "UNKNOWN";
+        }
+    }
+
     static std::string DateTimePartTypeToString(DateTimePart part) {
         switch (part) {
             // Date parts
@@ -638,7 +645,6 @@ public:
         switch (sym) {
         case TSQLSymbol::DOT:         return "DOT";
         case TSQLSymbol::COLON:       return "COLON";
-        case TSQLSymbol::DOUBLE_COLON:return "DOUBLE_COLON";
         case TSQLSymbol::UNKNOWN:     return "UNKNOWN";
         default:                      return "UNKNOWN";
         }
@@ -690,7 +696,7 @@ public:
      * @return true if character is an operator symbol
      */
     static bool isOperatorChar(char c) {
-        return std::string("=!<>+-*/%^&|~").find(c) != std::string::npos;
+        return std::string("=!<>+-*/%^&|~:").find(c) != std::string::npos;
     }
 
     /**
@@ -717,7 +723,8 @@ public:
         case OperatorCategory::LOGICAL:     return SQLOperatorPrecedence::AND;
         case OperatorCategory::ASSIGN:      return SQLOperatorPrecedence::ASSIGNMENT;
         case OperatorCategory::CONCAT:      return SQLOperatorPrecedence::ADDITIVE;
-        default:                           return SQLOperatorPrecedence::LOWEST;
+        case OperatorCategory::TYPECAST:    return SQLOperatorPrecedence::TYPECAST;
+        default:                            return SQLOperatorPrecedence::LOWEST;
         }
     }
 
@@ -734,7 +741,8 @@ public:
         case OperatorCategory::LOGICAL:     return true;
         case OperatorCategory::CONCAT:      return true;
         case OperatorCategory::ASSIGN:      return false;
-        default:                           return true;
+        case OperatorCategory::TYPECAST:    return true; 
+        default:                            return true;
         }
     }
 
@@ -747,12 +755,13 @@ public:
    */
     static std::string getOperatorSymbol(OperatorCategory op) {
         switch (op) {
-        case OperatorCategory::ARITHMETIC:  return "+-*/";
-        case OperatorCategory::BITWISE:     return "&|^";
+        case OperatorCategory::ARITHMETIC:  return "+-*/%";
+        case OperatorCategory::BITWISE:     return "&|^~";
         case OperatorCategory::COMPARISON:  return "<>=!";
         case OperatorCategory::LOGICAL:     return "AND OR NOT";
         case OperatorCategory::CONCAT:      return "||";
-        default:                           return "";
+        case OperatorCategory::TYPECAST:    return "::";
+        default:                            return "";
         }
     }
 
@@ -771,7 +780,17 @@ public:
      * @return true if category contains binary operators
      */
     static bool isBinaryOperator(OperatorCategory op) {
-        return op != OperatorCategory::UNKNOWN && !isUnaryOperator(op);
+        return op != OperatorCategory::UNKNOWN &&
+            (op == OperatorCategory::ARITHMETIC ||
+                op == OperatorCategory::BITWISE ||
+                op == OperatorCategory::COMPARISON ||
+                op == OperatorCategory::LOGICAL ||
+                op == OperatorCategory::ASSIGN ||
+                op == OperatorCategory::CONCAT ||
+                op == OperatorCategory::JSON ||
+                op == OperatorCategory::REGEX ||
+                op == OperatorCategory::ARRAY ||
+                op == OperatorCategory::TYPECAST);
     }
 
     /**

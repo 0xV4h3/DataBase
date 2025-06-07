@@ -48,6 +48,51 @@ public:
         validate();
     }
 
+    /**
+ * @brief Constructs a PunctuatorInfo object for a common symbol.
+ * @param symbol Common symbol type
+ * @param lexeme_ Punctuator text
+ * @throws std::invalid_argument if lexeme is empty
+ */
+    PunctuatorInfo(CommonSymbol symbol, std::string lexeme_)
+        : lexeme(std::move(lexeme_))
+        , commonSymbol(symbol)
+        , tsqlSymbol(TSQLSymbol::UNKNOWN)
+        , stringDelimiter(StringDelimiter::UNKNOWN)
+    {
+        validate();
+    }
+
+    /**
+     * @brief Constructs a PunctuatorInfo object for a T-SQL symbol.
+     * @param symbol T-SQL symbol type
+     * @param lexeme_ Punctuator text
+     * @throws std::invalid_argument if lexeme is empty
+     */
+    PunctuatorInfo(TSQLSymbol symbol, std::string lexeme_)
+        : lexeme(std::move(lexeme_))
+        , commonSymbol(CommonSymbol::UNKNOWN)
+        , tsqlSymbol(symbol)
+        , stringDelimiter(StringDelimiter::UNKNOWN)
+    {
+        validate();
+    }
+
+    /**
+     * @brief Constructs a PunctuatorInfo object for a string delimiter.
+     * @param delimiter String delimiter type
+     * @param lexeme_ Punctuator text
+     * @throws std::invalid_argument if lexeme is empty
+     */
+    PunctuatorInfo(StringDelimiter delimiter, std::string lexeme_)
+        : lexeme(std::move(lexeme_))
+        , commonSymbol(CommonSymbol::UNKNOWN)
+        , tsqlSymbol(TSQLSymbol::UNKNOWN)
+        , stringDelimiter(delimiter)
+    {
+        validate();
+    }
+
     // Rule of five for proper memory management
     PunctuatorInfo(const PunctuatorInfo&) = default;
     PunctuatorInfo(PunctuatorInfo&&) noexcept = default;

@@ -192,6 +192,48 @@ public:
         return oss.str();
     }
 
+    // === Mutators for semantic resolver ===
+
+    /**
+     * @brief Sets the category of this identifier.
+     * @param cat New IdentifierCategory
+     */
+    void setCategory(IdentifierCategory cat) {
+        category = cat;
+    }
+
+    /**
+     * @brief Sets the schema name.
+     * @param s New schema name
+     */
+    void setSchema(const std::string& s) {
+        schema = s;
+    }
+
+    /**
+     * @brief Sets the database name.
+     * @param db New database name
+     */
+    void setDatabase(const std::string& db) {
+        database = db;
+    }
+
+    /**
+     * @brief Adds a column name (for table/view metadata).
+     * @param col Column name to add
+     */
+    void addColumn(const std::string& col) {
+        columns.push_back(col);
+    }
+
+    /**
+     * @brief Adds a parameter name (for function/procedure metadata).
+     * @param param Parameter name to add
+     */
+    void addParameter(const std::string& param) {
+        parameters.push_back(param);
+    }
+
 public:
     IdentifierCategory category;         ///< Identifier category (table, column, variable, etc.)
     std::string name;                    ///< Name of the identifier
