@@ -37,6 +37,9 @@ std::string TokenUtils::getKeywordName(
     case KeywordCategory::SETOP:
         return LexerUtils::SetOpKeywordTypeToString(
             static_cast<SetOpKeyword>(token.infoPtr->subKind));
+    case KeywordCategory::SESSION_OPTION:
+        return LexerUtils::SessionOptionKeywordTypeToString(
+            static_cast<SessionOptionKeyword>(token.infoPtr->subKind));
     case KeywordCategory::PREDICATE:
         return LexerUtils::PredicateKeywordTypeToString(
             static_cast<PredicateKeyword>(token.infoPtr->subKind));

@@ -41,19 +41,20 @@ public:
 
     static std::string keywordCategoryToString(KeywordCategory cat) {
         switch (cat) {
-        case KeywordCategory::DML:           return "DMLKeyword";
-        case KeywordCategory::DDL:           return "DDLKeyword";
-        case KeywordCategory::CLAUSE:        return "ClauseKeyword";
-        case KeywordCategory::CTE:           return "CTEKeyword";
-        case KeywordCategory::SETOP:         return "SetOpKeyword";
-        case KeywordCategory::PREDICATE:     return "PredicateKeyword";  
-        case KeywordCategory::LOGICAL_CONST: return "LogicalConstantKeyword";
-        case KeywordCategory::TRANSACTION:   return "TransactionKeyword";
-        case KeywordCategory::SECURITY:      return "SecurityKeyword";
-        case KeywordCategory::PROG_STMT:     return "ProgStmtKeyword";
-        case KeywordCategory::MISC:          return "MiscKeyword";
-        case KeywordCategory::UNKNOWN:       return "UNKNOWN";
-        default:                             return "UNKNOWN";
+        case KeywordCategory::DML:              return "DMLKeyword";
+        case KeywordCategory::DDL:              return "DDLKeyword";
+        case KeywordCategory::CLAUSE:           return "ClauseKeyword";
+        case KeywordCategory::CTE:              return "CTEKeyword";
+        case KeywordCategory::SETOP:            return "SetOpKeyword";
+        case KeywordCategory::SESSION_OPTION:   return "SessionOptionKeyword";
+        case KeywordCategory::PREDICATE:        return "PredicateKeyword";  
+        case KeywordCategory::LOGICAL_CONST:    return "LogicalConstantKeyword";
+        case KeywordCategory::TRANSACTION:      return "TransactionKeyword";
+        case KeywordCategory::SECURITY:         return "SecurityKeyword";
+        case KeywordCategory::PROG_STMT:        return "ProgStmtKeyword";
+        case KeywordCategory::MISC:             return "MiscKeyword";
+        case KeywordCategory::UNKNOWN:          return "UNKNOWN";
+        default:                                return "UNKNOWN";
         }
     }
 
@@ -228,6 +229,19 @@ public:
         }
     }
 
+    static std::string SessionOptionKeywordTypeToString(SessionOptionKeyword kw) {
+        switch (kw) {
+        case SessionOptionKeyword::SET:                   return "SET";
+        case SessionOptionKeyword::ON:                    return "ON";
+        case SessionOptionKeyword::OFF:                   return "OFF";
+        case SessionOptionKeyword::AUTOCOMMIT:            return "AUTOCOMMIT";
+        case SessionOptionKeyword::IMPLICIT_TRANSACTIONS: return "IMPLICIT_TRANSACTIONS";
+        case SessionOptionKeyword::ISOLATION_LEVEL:       return "ISOLATION_LEVEL";
+        case SessionOptionKeyword::UNKNOWN:               return "UNKNOWN";
+        default:                                          return "UNKNOWN";
+        }
+    }
+
     static std::string PredicateKeywordTypeToString(PredicateKeyword kw) {  
         switch (kw) {
         case PredicateKeyword::IN:      return "IN";
@@ -257,14 +271,15 @@ public:
 
     static std::string TransactionKeywordTypeToString(TransactionKeyword kw) {
         switch (kw) {
-        case TransactionKeyword::BEGIN:     return "BEGIN";
-        case TransactionKeyword::COMMIT:    return "COMMIT";
-        case TransactionKeyword::ROLLBACK:  return "ROLLBACK";
-        case TransactionKeyword::SAVEPOINT: return "SAVEPOINT";
-        case TransactionKeyword::RELEASE:   return "RELEASE";
-        case TransactionKeyword::CHAIN:     return "CHAIN";
-        case TransactionKeyword::UNKNOWN:   return "UNKNOWN";
-        default:                            return "UNKNOWN";
+        case TransactionKeyword::TRANSACTION:           return "TRANSACTION";
+        case TransactionKeyword::BEGIN:                 return "BEGIN";
+        case TransactionKeyword::COMMIT:                return "COMMIT";
+        case TransactionKeyword::ROLLBACK:              return "ROLLBACK";
+        case TransactionKeyword::SAVEPOINT:             return "SAVEPOINT";
+        case TransactionKeyword::RELEASE:               return "RELEASE";
+        case TransactionKeyword::CHAIN:                 return "CHAIN";
+        case TransactionKeyword::UNKNOWN:               return "UNKNOWN";
+        default:                                        return "UNKNOWN";
         }
     }
 

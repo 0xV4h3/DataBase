@@ -294,6 +294,7 @@ private:
     static const std::unordered_map<std::string, std::shared_ptr<KeywordInfo>> clauseMap;
     static const std::unordered_map<std::string, std::shared_ptr<KeywordInfo>> cteMap;
     static const std::unordered_map<std::string, std::shared_ptr<KeywordInfo>> setOpMap;
+    static const std::unordered_map<std::string, std::shared_ptr<KeywordInfo>> sessionOptionMap;
     static const std::unordered_map<std::string, std::shared_ptr<KeywordInfo>> predicateMap;
     static const std::unordered_map<std::string, std::shared_ptr<KeywordInfo>> logicalConstMap;
     static const std::unordered_map<std::string, std::shared_ptr<KeywordInfo>> tranMap;

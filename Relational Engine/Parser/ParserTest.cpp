@@ -37,14 +37,14 @@ auto print_token_info = [](const Token& token) {
     else if (token.getType() == TokenType::LITERAL) {
         auto lit = dynamic_cast<const LiteralToken*>(&token);
         if (lit) {
-            std::cout << " (LiteralType: " << LexerUtils::literalTypeToString(lit->litType) << ")";
+            std::cout << " (LiteralType: " << LexerUtils::literalCategoryToString(lit->litType) << ")";
         }
     }
     // IDENTIFIER
     else if (token.getType() == TokenType::IDENTIFIER) {
         auto id = dynamic_cast<const IdentifierToken*>(&token);
         if (id && id->infoPtr) {
-            std::cout << " (IdentifierType: " << LexerUtils::identifierTypeToString(id->infoPtr->category) << ")";
+            std::cout << " (IdentifierType: " << LexerUtils::identifierCategoryToString(id->infoPtr->category) << ")";
         }
     }
     // KEYWORD

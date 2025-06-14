@@ -129,6 +129,26 @@ enum class SetOpKeyword {
 };
 
 /**
+ * @enum SessionOptionKeyword
+ * @brief Keywords used in SET statements and session-level options.
+ */
+enum class SessionOptionKeyword {
+    UNKNOWN = 0,
+
+    // SET command
+    SET,                     // SET … command
+
+    // Boolean toggles
+    ON,                      // SET … ON
+    OFF,                     // SET … OFF
+
+    // Session options
+    AUTOCOMMIT,              // SET AUTOCOMMIT = {0|1}
+    IMPLICIT_TRANSACTIONS,   // SET IMPLICIT_TRANSACTIONS {ON|OFF}
+    ISOLATION_LEVEL          // SET TRANSACTION ISOLATION LEVEL …
+};
+
+/**
  * @enum PredicateKeyword
  * @brief Predicate and condition keywords.
  * @details Replaces WordOperatorKeyword for clarity.
@@ -164,6 +184,8 @@ enum class LogicalConstantKeyword {
  */
 enum class TransactionKeyword {
     UNKNOWN = 0,
+    // Transaction statement
+    TRANSACTION,
     // Core transaction
     BEGIN, COMMIT, ROLLBACK,
     // Savepoint control
@@ -389,17 +411,18 @@ enum class WindowFunction {
  */
 enum class KeywordCategory {
     UNKNOWN = 0,
-    DML,           // Data manipulation
-    DDL,           // Data definition
-    CLAUSE,        // Query clauses
-    CTE,           // Common table expressions
-    SETOP,         // Set operations
-    PREDICATE,     // Conditions and tests
-    LOGICAL_CONST, // TRUE, FALSE, NULL
-    TRANSACTION,   // Transaction control
-    SECURITY,      // Permissions
-    PROG_STMT,     // Programming
-    MISC          // Other keywords
+    DML,                    // Data manipulation
+    DDL,                    // Data definition
+    CLAUSE,                 // Query clauses (SELECT, FROM, WHERE, etc.)
+    CTE,                    // Common table expressions (WITH)
+    SETOP,                  // Set operations (UNION, INTERSECT, EXCEPT)
+    SESSION_OPTION,         // Session-level options (SET, ON, OFF, AUTOCOMMIT, etc.)
+    PREDICATE,              // Conditions and tests (IS NULL, BETWEEN, etc.)
+    LOGICAL_CONST,          // TRUE, FALSE, NULL
+    TRANSACTION,            // Transaction control (BEGIN, COMMIT, ROLLBACK)
+    SECURITY,               // Permissions (GRANT, REVOKE)
+    PROG_STMT,              // Programming statements (DECLARE, IF, LOOP, etc.)
+    MISC                    // Other keywords
 };
 
 /**

@@ -150,6 +150,18 @@ const std::unordered_map<std::string, std::shared_ptr<KeywordInfo>> Lexer::setOp
 };
 
 /**
+ * @brief Map for session-level SET options
+ */
+const std::unordered_map<std::string, std::shared_ptr<KeywordInfo>> Lexer::sessionOptionMap = {
+    {"SET",                  std::make_shared<KeywordInfo>("SET",                   KeywordCategory::SESSION_OPTION, static_cast<int>(SessionOptionKeyword::SET))},
+    {"ON",                   std::make_shared<KeywordInfo>("ON",                    KeywordCategory::SESSION_OPTION, static_cast<int>(SessionOptionKeyword::ON))},
+    {"OFF",                  std::make_shared<KeywordInfo>("OFF",                   KeywordCategory::SESSION_OPTION, static_cast<int>(SessionOptionKeyword::OFF))},
+    {"AUTOCOMMIT",           std::make_shared<KeywordInfo>("AUTOCOMMIT",            KeywordCategory::SESSION_OPTION, static_cast<int>(SessionOptionKeyword::AUTOCOMMIT))},
+    {"IMPLICIT_TRANSACTIONS",std::make_shared<KeywordInfo>("IMPLICIT_TRANSACTIONS", KeywordCategory::SESSION_OPTION, static_cast<int>(SessionOptionKeyword::IMPLICIT_TRANSACTIONS))},
+    {"ISOLATION_LEVEL",      std::make_shared<KeywordInfo>("ISOLATION_LEVEL",       KeywordCategory::SESSION_OPTION, static_cast<int>(SessionOptionKeyword::ISOLATION_LEVEL))}
+};
+
+/**
  * @brief Map for predicate keywords
  */
 const std::unordered_map<std::string, std::shared_ptr<KeywordInfo>> Lexer::predicateMap = {
@@ -178,6 +190,7 @@ const std::unordered_map<std::string, std::shared_ptr<KeywordInfo>> Lexer::logic
  * @brief Map for transaction keywords
  */
 const std::unordered_map<std::string, std::shared_ptr<KeywordInfo>> Lexer::tranMap = {
+    {"TRANSACTION", std::make_shared<KeywordInfo>("TRANSACTION", KeywordCategory::TRANSACTION, static_cast<int>(TransactionKeyword::TRANSACTION))},
     {"BEGIN", std::make_shared<KeywordInfo>("BEGIN", KeywordCategory::TRANSACTION, static_cast<int>(TransactionKeyword::BEGIN))},
     {"COMMIT", std::make_shared<KeywordInfo>("COMMIT", KeywordCategory::TRANSACTION, static_cast<int>(TransactionKeyword::COMMIT))},
     {"ROLLBACK", std::make_shared<KeywordInfo>("ROLLBACK", KeywordCategory::TRANSACTION, static_cast<int>(TransactionKeyword::ROLLBACK))},
@@ -2834,7 +2847,7 @@ std::unique_ptr<Token> Lexer::createKeywordToken(const std::string& word) {
 
     // Check keyword maps in priority order
     const std::vector<const std::unordered_map<std::string, std::shared_ptr<KeywordInfo>>*> keywordMaps = {
-        &dmlMap, &ddlMap, &clauseMap, &cteMap, &setOpMap, &predicateMap,
+        &dmlMap, &ddlMap, &clauseMap, &cteMap, &setOpMap, &sessionOptionMap, &predicateMap,
         &logicalConstMap, &tranMap, &secMap, &progMap, &miscMap
     };
 
